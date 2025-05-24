@@ -35,8 +35,11 @@ public class LectureDetailResponse {
         private String content;
         private Scores scores;
         private AssignmentInfo assignment;
+        private String examType;
+        private Boolean teamProject;
         private LocalDateTime createdAt;
         private AuthorInfo author;
+        private boolean isRestricted;
     }
 
     @Getter

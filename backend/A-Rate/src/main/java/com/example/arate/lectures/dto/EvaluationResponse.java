@@ -14,6 +14,8 @@ public class EvaluationResponse {
     private String content;
     private Scores scores;
     private AssignmentInfo assignment;
+    private String examType;
+    private Boolean teamProject;
     private LocalDateTime createdAt;
     private AuthorInfo author;
 

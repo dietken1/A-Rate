@@ -20,15 +20,34 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    @Column(nullable = false, length = 50)
+    private String nickname;
+
+    @Column(length = 255)
+    private String department;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Role role = Role.STUDENT;
+
+    @Column(length = 255)
+    private String studentNumber;
+
+    @Column(length = 255)
+    private String profileImage;
+
+    // OAuth 관련 필드들 (기존 스키마에는 없지만 OAuth 기능을 위해 유지)
     private String imageUrl;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean emailVerified = false;
 
     private String password;
@@ -38,15 +57,21 @@ public class User {
 
     private String providerId;
 
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        
+        // nickname이 없으면 name으로 설정
+        if (nickname == null || nickname.trim().isEmpty()) {
+            nickname = name;
+        }
     }
 
     @PreUpdate

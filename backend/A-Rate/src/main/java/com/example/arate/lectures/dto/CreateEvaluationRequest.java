@@ -50,6 +50,12 @@ public class CreateEvaluationRequest {
     @NotNull(message = "과제 난이도는 필수입니다")
     private LectureEvaluation.AssignmentDifficulty assignmentDifficulty;
 
+    @NotNull(message = "시험 유형은 필수입니다")
+    private LectureEvaluation.ExamType exam;
+
+    @NotNull(message = "팀 프로젝트 유무는 필수입니다")
+    private Boolean teamProject;
+
     @NotBlank(message = "학기는 필수입니다")
     private String semester;
 } 
