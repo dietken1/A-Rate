@@ -12,6 +12,7 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
+    image: a-rate-db
     ports:
       - "3307:3306"
     environment:
@@ -28,6 +29,7 @@ services:
     build:
       context: ./backend/A-Rate
       dockerfile: Dockerfile
+    image: a-rate-back
     ports:
       - "8080:8080"
     volumes:
@@ -43,6 +45,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: a-rate-front
     ports:
       - "3000:3000"
     volumes:
@@ -60,6 +63,7 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile
+    image: a-rate-nginx
     ports:
       - "80:80"
       - "443:443"
