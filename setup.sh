@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # .env 파일 로드
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
@@ -7,18 +9,24 @@ else
     export $(grep -v '^#' .env | xargs)
 fi
 
+# SSL 디렉토리 정리
 cd ssl
-find . -not -name 'init-letsencrypt.sh' -not -name 'setup_ssl.sh' -not -name 'cloudflare.ini' -not -name '.' -not -name '..' -exec sudo rm -rf {} +
+find . -not -name 'init-letsencrypt.sh' -not -name 'setup_ssl.sh' -not -name 'cloudflare.ini' -not -name '.' -not -name '..' -exec rm -rf {} +
 
 cd ..
 
 echo "SERVER_NAME: $SERVER_NAME"
 
-docker-compose down -v
+# Docker 컨테이너 중지 및 볼륨 삭제
+docker compose down -v
 
+# SSL 인증서 초기화
 cd ssl
-sudo ./init-letsencrypt.sh -y
+./init-letsencrypt.sh -y
 cd ..
 
-sudo chmod -R 755 ssl
-docker-compose up -d --build
+# 권한 설정
+chmod -R 755 ssl
+
+# Docker 컨테이너 시작
+docker compose up -d --build
