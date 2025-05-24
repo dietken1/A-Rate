@@ -3,15 +3,20 @@ import Sidebar from "../components/Sidebar";
 import CommentCard from "../components/home/CommentCard";
 import RatingCard from "../components/home/RatingCard";
 import { Link } from "react-router-dom";
+import useAuthStore from "../store/useAuthStore";
 
 const Home = () => {
+  const { user } = useAuthStore();
+
   return (
     <div className="flex h-screen w-full h-full bg">
       <Sidebar />
       <div className="flex-1 overflow-auto py-5 px-8">
         <Header />
         <div className="font-bold text-xl">
-          로그인하고 원하는 강의평을 마음껏 찾아보세요.
+          {user
+            ? `${user.user.name}님, 안녕하세요!`
+            : "로그인하고 원하는 강의평을 마음껏 찾아보세요."}
         </div>
         <div className="text-sm text-gray-600 mt-1 mb-[30px]">
           A:Rate와 함께 A<sup>+</sup>를 향한 여정을 시작하세요.
