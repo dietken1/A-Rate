@@ -1,5 +1,6 @@
 package com.example.arate.lectures.entity;
 
+import com.example.arate.users.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,11 +18,13 @@ public class LectureEvaluation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    private User user;
 
-    @Column(name = "lecture_id", nullable = false)
-    private Long lectureId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lecture_id", referencedColumnName = "id", nullable = false)
+    private Lecture lecture;
 
     private String semester;
     private String content;
@@ -51,6 +54,13 @@ public class LectureEvaluation {
     @Enumerated(EnumType.STRING)
     @Column(name = "assignment_difficulty")
     private AssignmentDifficulty assignmentDifficulty;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "exam")
+    private ExamType exam;
+    
+    @Column(name = "team_project")
+    private Boolean teamProject;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -64,5 +74,9 @@ public class LectureEvaluation {
 
     public enum AssignmentDifficulty {
         EASY, NORMAL, HARD
+    }
+    
+    public enum ExamType {
+        MIDTERM, FINAL, BOTH
     }
 } 

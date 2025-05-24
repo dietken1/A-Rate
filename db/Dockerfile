@@ -1,11 +1,8 @@
 FROM mysql:8.0
 
-# 초기화 스크립트 복사 및 권한 설정
-COPY init-mysql.sh /docker-entrypoint-initdb.d/
-RUN chmod +x /docker-entrypoint-initdb.d/init-mysql.sh
-
-# MySQL 설정
-ENV MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-ENV MYSQL_DATABASE=${MYSQL_DATABASE}
+# Copy SQL initialization files only (no shell scripts)
+COPY 01-init-schema.sql /docker-entrypoint-initdb.d/01-init-schema.sql
+COPY 02-professors.sql /docker-entrypoint-initdb.d/02-professors.sql
+COPY 03-lectures.sql /docker-entrypoint-initdb.d/03-lectures.sql
 
 EXPOSE 3306

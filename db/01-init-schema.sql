@@ -1,15 +1,15 @@
-#!/bin/bash
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET character_set_connection=utf8mb4;
 
-mysql -u root -p${MYSQL_ROOT_PASSWORD} << EOF
 CREATE DATABASE IF NOT EXISTS arate_db;
 USE arate_db;
 
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
     email VARCHAR(100) NOT NULL COMMENT 'School email',
     nickname VARCHAR(50) NOT NULL COMMENT 'Nickname',
-    password VARCHAR(255) NOT NULL COMMENT 'Hashed password',
     department VARCHAR(255),
     role ENUM('STUDENT', 'PROFESSOR', 'ADMIN') NOT NULL COMMENT 'User role',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Registration time',
@@ -17,19 +17,27 @@ CREATE TABLE users (
     profile_image VARCHAR(255)
 );
 
-CREATE TABLE lectures (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    professor_id INT NOT NULL,
-    title VARCHAR(100) NOT NULL,
-    professor_ref_id INT,
-    department VARCHAR(100),
-    FOREIGN KEY (professor_id) REFERENCES users(id)
+CREATE TABLE IF NOT EXISTS professors (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(32) NOT NULL,
+    user_id BIGINT NULL COMMENT 'User ID for authentication',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE TABLE lecture_evaluations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    lecture_id INT NOT NULL,
+CREATE TABLE IF NOT EXISTS lectures (
+    id BIGINT PRIMARY KEY,
+    professor_id BIGINT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    course_type ENUM('1','2','3','4','5','6') NOT NULL COMMENT 'Course classification',
+    is_english_lecture BOOLEAN DEFAULT FALSE COMMENT 'Whether the lecture is in English',
+    FOREIGN KEY (professor_id) REFERENCES professors(id)
+);
+
+CREATE TABLE IF NOT EXISTS lecture_evaluations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    lecture_id BIGINT NOT NULL,
     semester VARCHAR(255),
     content TEXT,
     delivery_score TINYINT,
@@ -41,15 +49,17 @@ CREATE TABLE lecture_evaluations (
     assignment_amount ENUM('NONE', 'FEW', 'NORMAL', 'MANY'),
     assignment_difficulty ENUM('EASY', 'NORMAL', 'HARD'),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    exam ENUM('MIDTERM', 'FINAL', 'BOTH'),
+    team_project BOOLEAN,
     updated_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (lecture_id) REFERENCES lectures(id)
 );
 
-CREATE TABLE enrollments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL,
-    lecture_id INT NOT NULL,
+CREATE TABLE IF NOT EXISTS enrollments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,
+    lecture_id BIGINT NOT NULL,
     certification_image TEXT,
     grade VARCHAR(255),
     is_certified BOOLEAN DEFAULT FALSE,
@@ -60,10 +70,10 @@ CREATE TABLE enrollments (
     FOREIGN KEY (lecture_id) REFERENCES lectures(id)
 );
 
-CREATE TABLE shared_materials (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    uploader_id INT NOT NULL,
-    lecture_id INT NOT NULL,
+CREATE TABLE IF NOT EXISTS shared_materials (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uploader_id BIGINT NOT NULL,
+    lecture_id BIGINT NOT NULL,
     title VARCHAR(200),
     content TEXT,
     file TEXT,
@@ -73,12 +83,11 @@ CREATE TABLE shared_materials (
     FOREIGN KEY (lecture_id) REFERENCES lectures(id)
 );
 
-CREATE TABLE replies (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    evaluation_id INT NOT NULL,
-    author_id INT NOT NULL,
+CREATE TABLE IF NOT EXISTS replies (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    evaluation_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
     content VARCHAR(255),
     FOREIGN KEY (evaluation_id) REFERENCES lecture_evaluations(id),
     FOREIGN KEY (author_id) REFERENCES users(id)
-);
-EOF
+); 

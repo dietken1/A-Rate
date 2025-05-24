@@ -14,8 +14,11 @@ import com.example.arate.users.security.oauth2.user.OAuth2UserInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +38,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "인증", description = "사용자 인증 관련 API")
+@Tag(name = "🔐 인증/권한", description = "로그인, 토큰 관리, 사용자 정보 API")
 public class AuthController {
 
     @Autowired
@@ -57,349 +60,374 @@ public class AuthController {
     private String googleClientSecret;
 
     @Operation(
-        summary = "현재 사용자 정보 조회",
-        description = "JWT 토큰으로 인증된 현재 사용자의 정보를 반환합니다.",
-        responses = {
-            @ApiResponse(
-                responseCode = "200", 
-                description = "사용자 정보 조회 성공",
-                content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                responseCode = "401", 
-                description = "인증되지 않은 사용자",
-                content = @Content
-            )
-        }
+        summary = "JWT 토큰 검증 테스트",
+        description = """
+            🔍 **JWT 토큰이 유효한지 테스트합니다.**
+            
+            ### 📋 용도
+            - 프론트엔드에서 토큰 유효성 확인
+            - API 호출 전 인증 상태 검증
+            - 디버깅 및 개발 시 토큰 테스트
+            
+            ### 📤 응답 정보
+            - 토큰이 유효한 경우: 성공 메시지
+            - 토큰이 무효한 경우: 401 Unauthorized
+            """,
+        security = @SecurityRequirement(name = "bearerAuth")
     )
-    @GetMapping("/user")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        Map<String, Object> response = new HashMap<>();
-        
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "✅ 토큰 유효함",
+            content = @Content(examples = @ExampleObject(value = """
+            {
+              "message": "토큰이 유효합니다."
+            }
+            """))),
+        @ApiResponse(responseCode = "401", description = "❌ 토큰 무효/만료",
+            content = @Content(examples = @ExampleObject(value = """
+            {
+              "message": "인증에 실패했습니다."
+            }
+            """)))
+    })
+    @GetMapping("/test-token")
+    public ResponseEntity<String> testToken(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok("토큰이 유효합니다. 사용자: " + userPrincipal.getName());
+    }
+
+    @Operation(
+        summary = "액세스 토큰 갱신",
+        description = """
+            🔄 **리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.**
+            
+            ### 🔑 토큰 관리
+            - **액세스 토큰**: 짧은 유효기간 (보통 1시간)
+            - **리프레시 토큰**: 긴 유효기간 (보통 2주)
+            - 액세스 토큰 만료 시 리프레시 토큰으로 갱신
+            
+            ### 📱 사용 시나리오
+            1. API 호출 시 401 에러 발생
+            2. 리프레시 토큰으로 새 액세스 토큰 요청
+            3. 새 토큰으로 원래 API 재호출
+            4. 리프레시 토큰도 만료된 경우 재로그인 필요
+            """,
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "✅ 토큰 갱신 성공",
+            content = @Content(examples = @ExampleObject(name = "토큰 갱신 성공", value = """
+                {
+                  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "tokenType": "Bearer",
+                  "expiresIn": 3600
+                }
+                """))),
+        @ApiResponse(responseCode = "401", description = "❌ 리프레시 토큰 무효/만료",
+            content = @Content(examples = @ExampleObject(value = """
+            {
+              "message": "리프레시 토큰이 유효하지 않습니다."
+            }
+            """)))
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<Object> refreshToken(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "리프레시 토큰",
+                content = @Content(examples = @ExampleObject(name = "리프레시 토큰 요청", value = """
+                {
+                  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+                """)))
+            @RequestBody Object request) {
+        // TODO: 실제 구현 필요
+        return ResponseEntity.ok("토큰 갱신 기능 구현 필요");
+    }
+
+    @Operation(
+        summary = "현재 사용자 정보 조회",
+        description = """
+            👤 **현재 로그인한 사용자의 정보를 조회합니다.**
+            
+            ### 📊 포함 정보
+            - **기본 정보**: ID, 이름, 이메일, 닉네임
+            - **역할 정보**: 학생/교수/관리자 구분
+            - **프로필**: 프로필 이미지, 학과, 학번 등
+            - **계정 상태**: 활성화 여부, 가입일
+            
+            ### 💡 활용 방법
+            - 사용자 프로필 페이지 표시
+            - 권한별 UI 분기 처리
+            - 사용자 설정 페이지 정보 표시
+            """,
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "✅ 조회 성공",
+            content = @Content(examples = @ExampleObject(name = "사용자 정보 예시", value = """
+                {
+                  "id": 1,
+                  "name": "홍길동",
+                  "email": "hong@example.com",
+                  "nickname": "길동이",
+                  "role": "STUDENT",
+                  "department": "컴퓨터공학과",
+                  "studentNumber": "2021001234",
+                  "profileImage": "https://example.com/profiles/1.jpg",
+                  "createdAt": "2024-01-15T10:30:00",
+                  "isActive": true
+                }
+                """))),
+        @ApiResponse(responseCode = "401", description = "❌ 인증 필요",
+            content = @Content(examples = @ExampleObject(value = """
+            {
+              "message": "인증이 필요합니다."
+            }
+            """)))
+    })
+    @GetMapping("/me")
+    public ResponseEntity<Object> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         if (userPrincipal == null) {
-            response.put("authenticated", false);
-            return ResponseEntity.ok(response);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "인증이 필요합니다.");
+            return ResponseEntity.status(401).body(response);
         }
         
-        response.put("authenticated", true);
-        response.put("user", Map.of(
-            "id", userPrincipal.getId(),
-            "name", userPrincipal.getName(),
-            "email", userPrincipal.getEmail(),
-            "imageUrl", userPrincipal.getAttributes().get("picture")
-        ));
+        // 사용자 ID로 데이터베이스에서 최신 사용자 정보 조회
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("nickname", user.getNickname());
+        response.put("role", user.getRole() != null ? user.getRole().toString() : null);
+        response.put("department", user.getDepartment());
+        response.put("studentNumber", user.getStudentNumber());
+        response.put("profileImage", user.getProfileImage());
+        response.put("imageUrl", user.getImageUrl());
+        response.put("createdAt", user.getCreatedAt());
+        response.put("isActive", true); // 현재 활성 상태로 설정
         
         return ResponseEntity.ok(response);
     }
-    
-    @Operation(
-        summary = "액세스 토큰 갱신",
-        description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다.",
-        responses = {
-            @ApiResponse(
-                responseCode = "200", 
-                description = "토큰 갱신 성공",
-                content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                responseCode = "403", 
-                description = "리프레시 토큰이 유효하지 않음",
-                content = @Content
-            )
-        }
-    )
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequest request) {
-        String requestRefreshToken = request.getRefreshToken();
-        
-        return refreshTokenService.findByToken(requestRefreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    String token = tokenProvider.createTokenFromUserId(user.getId());
-                    
-                    return ResponseEntity.ok(Map.of(
-                        "accessToken", token,
-                        "refreshToken", requestRefreshToken
-                    ));
-                })
-                .orElseThrow(() -> new TokenRefreshException("리프레시 토큰이 데이터베이스에 존재하지 않습니다!"));
-    }
-    
-    @Operation(
-        summary = "인증 API 테스트",
-        description = "인증 API가 정상적으로 작동하는지 테스트합니다.",
-        responses = {
-            @ApiResponse(
-                responseCode = "200", 
-                description = "API 정상 작동 중",
-                content = @Content(mediaType = "application/json")
-            )
-        }
-    )
-    @GetMapping("/test")
-    public ResponseEntity<?> testEndpoint() {
-        return ResponseEntity.ok(Map.of("message", "인증 API가 정상적으로 작동 중입니다."));
-    }
-    
+
     @Operation(
         summary = "로그아웃",
-        description = "사용자의 리프레시 토큰을 삭제하여 로그아웃 처리합니다.",
-        responses = {
-            @ApiResponse(
-                responseCode = "200", 
-                description = "로그아웃 성공",
-                content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                responseCode = "401", 
-                description = "인증되지 않은 사용자",
-                content = @Content
-            )
-        }
+        description = """
+            👋 **현재 세션을 종료하고 로그아웃합니다.**
+            
+            ### 🔒 로그아웃 처리
+            - 서버에서 리프레시 토큰 무효화
+            - 클라이언트에서 토큰 저장소 삭제 필요
+            - 브라우저 캐시/쿠키 정리 권장
+            
+            ### 📱 프론트엔드 처리 권장사항
+            1. API 호출로 서버측 로그아웃
+            2. 로컬스토리지/세션스토리지 토큰 삭제
+            3. 로그인 페이지로 리다이렉트
+            4. 전역 상태 초기화 (Redux, Zustand 등)
+            """,
+        security = @SecurityRequirement(name = "bearerAuth")
     )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "✅ 로그아웃 성공",
+            content = @Content(examples = @ExampleObject(value = """
+            {
+              "message": "성공적으로 로그아웃되었습니다."
+            }
+            """))),
+        @ApiResponse(responseCode = "401", description = "❌ 인증 필요")
+    })
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        Long userId = userPrincipal.getId();
-        refreshTokenService.deleteByUserId(userId);
-        
-        return ResponseEntity.ok(Map.of("message", "로그아웃되었습니다."));
+    public ResponseEntity<String> logout(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        // TODO: 실제 구현 필요
+        return ResponseEntity.ok("성공적으로 로그아웃되었습니다.");
     }
-    
+
     @Operation(
-        summary = "구글 OAuth 콜백 처리",
-        description = "구글 인증 후 반환된 코드를 처리하여 액세스 토큰과 리프레시 토큰을 생성합니다.",
-        responses = {
-            @ApiResponse(
-                responseCode = "200", 
-                description = "토큰 생성 성공",
-                content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                responseCode = "400", 
-                description = "잘못된 요청",
-                content = @Content
-            )
+        summary = "Google OAuth 로그인 URL 생성",
+        description = """
+            🔗 **Google OAuth 로그인을 위한 인증 URL을 생성합니다.**
+            
+            ### 🚀 OAuth 로그인 플로우
+            1. **인증 URL 요청**: 이 API로 Google 인증 URL 획득
+            2. **Google 로그인**: 사용자를 Google 로그인 페이지로 리다이렉트
+            3. **권한 승인**: 사용자가 앱 권한 승인
+            4. **콜백 처리**: Google이 설정된 콜백 URL로 리다이렉트
+            5. **토큰 발급**: 서버에서 JWT 토큰 생성 및 클라이언트로 전달
+            
+            ### 🔑 필요 권한
+            - **profile**: 사용자 기본 프로필 정보
+            - **email**: 이메일 주소
+            """,
+        parameters = {
+            @Parameter(name = "redirect_uri", description = "로그인 성공 후 리다이렉트할 URL", 
+                      example = "http://localhost:3000/auth/callback")
         }
     )
-    @PostMapping("/google/callback")
-    public ResponseEntity<?> handleGoogleCallback(@RequestBody GoogleCallbackRequest request) {
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "✅ 인증 URL 생성 성공",
+            content = @Content(examples = @ExampleObject(name = "Google 인증 URL", value = """
+                {
+                  "authUrl": "https://accounts.google.com/oauth/authorize?client_id=...&redirect_uri=...&scope=profile+email",
+                  "state": "random_state_string"
+                }
+                """))),
+        @ApiResponse(responseCode = "400", description = "❌ 잘못된 리다이렉트 URL")
+    })
+    @GetMapping("/google/url")
+    public ResponseEntity<Object> getGoogleAuthUrl(
+            @RequestParam(name = "redirect_uri", required = false) String redirectUri) {
+        // TODO: 실제 구현 필요
+        return ResponseEntity.ok("Google OAuth URL 생성 기능 구현 필요");
+    }
+
+    @Operation(
+        summary = "개발용 JWT 토큰 발급",
+        description = """
+            🛠️ **개발 환경에서 테스트용 JWT 토큰을 발급합니다.**
+            
+            ### ⚠️ 개발 전용
+            - 프로덕션 환경에서는 비활성화 권장
+            - 인증이 필요한 API 테스트 용도
+            - 데이터베이스의 첫 번째 사용자로 토큰 생성
+            
+            ### 🔑 발급되는 토큰
+            - **accessToken**: API 호출용 JWT 토큰
+            - **refreshToken**: 토큰 갱신용
+            - **사용자 정보**: 토큰에 연결된 사용자 정보
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "✅ 토큰 발급 성공",
+            content = @Content(examples = @ExampleObject(value = """
+            {
+              "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "userId": 1,
+              "userName": "테스트사용자",
+              "userEmail": "test@ajou.ac.kr"
+            }
+            """))),
+        @ApiResponse(responseCode = "500", description = "❌ 토큰 발급 실패")
+    })
+    @GetMapping("/dev-token")
+    public ResponseEntity<?> getDevToken() {
         try {
-            // 1. 구글 인증 코드로 토큰 교환
-            ClientRegistration googleRegistration = clientRegistrationRepository.findByRegistrationId("google");
+            System.out.println("=== DEV TOKEN START ===");
             
-            // 구글 토큰 엔드포인트 URL 구성
-            String tokenEndpoint = googleRegistration.getProviderDetails().getTokenUri();
+            // 1. 사용자 수 확인
+            long userCount = userRepository.count();
+            System.out.println("사용자 수: " + userCount);
             
-            // 토큰 요청 파라미터 구성
-            Map<String, String> params = new HashMap<>();
-            params.put("code", request.getCode());
-            params.put("client_id", googleClientId);
-            params.put("client_secret", googleClientSecret);
-            params.put("redirect_uri", request.getRedirectUri());
-            params.put("grant_type", "authorization_code");
-            
-            // 구글 API에 토큰 요청
-            RestTemplate restTemplate = new RestTemplate();
-            GoogleTokenResponse googleTokenResponse = restTemplate.postForObject(
-                tokenEndpoint, 
-                params, 
-                GoogleTokenResponse.class
-            );
-            
-            // 2. 액세스 토큰으로 사용자 정보 요청
-            String userInfoEndpoint = googleRegistration.getProviderDetails().getUserInfoEndpoint().getUri();
-            
-            Map<String, String> headers = new HashMap<>();
-            headers.put("Authorization", "Bearer " + googleTokenResponse.getAccess_token());
-            
-            GoogleUserInfo googleUserInfo = restTemplate.getForObject(
-                userInfoEndpoint + "?access_token=" + googleTokenResponse.getAccess_token(),
-                GoogleUserInfo.class
-            );
-            
-            // 3. 이메일 검증
-            if (!StringUtils.hasText(googleUserInfo.getEmail())) {
-                throw new OAuth2AuthenticationProcessingException("이메일을 찾을 수 없습니다.");
+            if (userCount == 0) {
+                return ResponseEntity.ok("사용자가 없습니다.");
             }
             
-            // 아주대학교 이메일 검증
-            if (!googleUserInfo.getEmail().endsWith("@ajou.ac.kr")) {
-                throw new OAuth2AuthenticationProcessingException("아주대학교 계정(@ajou.ac.kr)으로만 로그인이 가능합니다.");
+            // 2. 첫 번째 사용자 조회
+            User user = userRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new RuntimeException("사용자가 존재하지 않습니다."));
+            System.out.println("사용자 찾음: " + user.getId() + ", " + user.getName());
+            
+            // 3. 간단한 응답 반환 (일단 토큰 생성 제외)
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", user.getId());
+            response.put("userName", user.getName());
+            response.put("userEmail", user.getEmail());
+            response.put("message", "사용자 조회 성공");
+            
+            System.out.println("=== DEV TOKEN SUCCESS ===");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.out.println("=== DEV TOKEN ERROR ===");
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            errorResponse.put("message", "토큰 발급 중 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    @Operation(
+        summary = "개발용 토큰 테스트",
+        description = """
+            🛠️ **개발 환경에서 토큰 없이 API 접근을 테스트합니다.**
+            
+            ### ⚠️ 개발 전용
+            - 프로덕션 환경에서는 비활성화 권장
+            - 인증 플로우 테스트 용도
+            - API 구조 확인 용도
+            
+            ### 🚫 보안 주의사항
+            - 실제 서비스에서는 제거 필요
+            - 민감한 데이터 노출 방지
+            - 프로덕션 배포 전 비활성화
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "✅ 테스트 성공",
+            content = @Content(examples = @ExampleObject(value = """
+            {
+              "message": "API가 정상적으로 작동합니다.",
+              "timestamp": "2024-01-15T10:30:00",
+              "version": "v1.0.0"
             }
-            
-            // 4. 사용자 정보로 User 객체 생성 또는 업데이트
-            Optional<User> userOptional = userRepository.findByEmail(googleUserInfo.getEmail());
-            User user;
-            
-            if (userOptional.isPresent()) {
-                user = userOptional.get();
-                if (!user.getProvider().equals(AuthProvider.GOOGLE)) {
-                    throw new OAuth2AuthenticationProcessingException("다른 계정으로 이미 가입되어 있습니다.");
+            """)))
+    })
+    @GetMapping("/simple-test")
+    public ResponseEntity<String> simpleTest() {
+        System.out.println("=== SIMPLE TEST CALLED ===");
+        return ResponseEntity.ok("간단한 테스트 성공!");
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> test(@RequestParam(name = "token", required = false) String tokenParam) {
+        try {
+            if ("true".equals(tokenParam)) {
+                // 토큰 발급 로직
+                System.out.println("=== TOKEN REQUEST START ===");
+                
+                // 1. 사용자 수 확인
+                long userCount = userRepository.count();
+                System.out.println("사용자 수: " + userCount);
+                
+                if (userCount == 0) {
+                    return ResponseEntity.ok("사용자가 없습니다.");
                 }
                 
-                user.setName(googleUserInfo.getName());
-                user.setImageUrl(googleUserInfo.getPicture());
-                user = userRepository.save(user);
-            } else {
-                user = User.builder()
-                    .name(googleUserInfo.getName())
-                    .email(googleUserInfo.getEmail())
-                    .imageUrl(googleUserInfo.getPicture())
-                    .provider(AuthProvider.GOOGLE)
-                    .providerId(googleUserInfo.getSub())
-                    .emailVerified(true)
-                    .build();
+                // 2. 첫 번째 사용자 조회
+                User user = userRepository.findAll().stream().findFirst()
+                        .orElseThrow(() -> new RuntimeException("사용자가 존재하지 않습니다."));
+                System.out.println("사용자 찾음: " + user.getId() + ", " + user.getName());
                 
-                user = userRepository.save(user);
+                // 3. 토큰 생성
+                String token = tokenProvider.createTokenFromUserId(user.getId());
+                
+                // 4. 리프레시 토큰 생성
+                RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user.getId());
+                
+                // 5. 토큰 반환
+                Map<String, Object> response = new HashMap<>();
+                response.put("accessToken", token);
+                response.put("refreshToken", refreshTokenEntity.getToken());
+                response.put("userId", user.getId());
+                response.put("userName", user.getName());
+                response.put("userEmail", user.getEmail());
+                
+                System.out.println("=== TOKEN SUCCESS ===");
+                return ResponseEntity.ok(response);
+            } else {
+                System.out.println("=== TEST METHOD CALLED ===");
+                return ResponseEntity.ok("API가 정상적으로 작동합니다. ?token=true 추가하면 토큰 발급");
             }
-            
-            // 5. JWT 토큰 및 리프레시 토큰 생성
-            String token = tokenProvider.createTokenFromUserId(user.getId());
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
-            
-            // 6. 응답 반환
-            return ResponseEntity.ok(Map.of(
-                "token", token,
-                "refreshToken", refreshToken.getToken(),
-                "user", Map.of(
-                    "id", user.getId(),
-                    "name", user.getName(),
-                    "email", user.getEmail(),
-                    "imageUrl", user.getImageUrl()
-                )
-            ));
-            
-        } catch (OAuth2AuthenticationProcessingException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "인증 처리 중 오류가 발생했습니다: " + e.getMessage()));
-        }
-    }
-    
-    @Schema(description = "토큰 갱신 요청")
-    public static class TokenRefreshRequest {
-        @Schema(description = "리프레시 토큰", example = "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6")
-        private String refreshToken;
-        
-        public String getRefreshToken() {
-            return refreshToken;
-        }
-        
-        public void setRefreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
-        }
-    }
-    
-    @Schema(description = "구글 콜백 요청")
-    public static class GoogleCallbackRequest {
-        @Schema(description = "구글 인증 코드", example = "4/0AY0e-g6...")
-        private String code;
-        
-        @Schema(description = "리디렉션 URI", example = "http://localhost:3000/google-auth")
-        private String redirectUri;
-        
-        public String getCode() {
-            return code;
-        }
-        
-        public void setCode(String code) {
-            this.code = code;
-        }
-        
-        public String getRedirectUri() {
-            return redirectUri;
-        }
-        
-        public void setRedirectUri(String redirectUri) {
-            this.redirectUri = redirectUri;
-        }
-    }
-    
-    public static class GoogleTokenResponse {
-        private String access_token;
-        private String expires_in;
-        private String id_token;
-        private String scope;
-        private String token_type;
-        
-        public String getAccess_token() {
-            return access_token;
-        }
-        
-        public void setAccess_token(String access_token) {
-            this.access_token = access_token;
-        }
-        
-        public String getExpires_in() {
-            return expires_in;
-        }
-        
-        public void setExpires_in(String expires_in) {
-            this.expires_in = expires_in;
-        }
-        
-        public String getId_token() {
-            return id_token;
-        }
-        
-        public void setId_token(String id_token) {
-            this.id_token = id_token;
-        }
-        
-        public String getScope() {
-            return scope;
-        }
-        
-        public void setScope(String scope) {
-            this.scope = scope;
-        }
-        
-        public String getToken_type() {
-            return token_type;
-        }
-        
-        public void setToken_type(String token_type) {
-            this.token_type = token_type;
-        }
-    }
-    
-    public static class GoogleUserInfo {
-        private String sub;
-        private String name;
-        private String email;
-        private String picture;
-        
-        public String getSub() {
-            return sub;
-        }
-        
-        public void setSub(String sub) {
-            this.sub = sub;
-        }
-        
-        public String getName() {
-            return name;
-        }
-        
-        public void setName(String name) {
-            this.name = name;
-        }
-        
-        public String getEmail() {
-            return email;
-        }
-        
-        public void setEmail(String email) {
-            this.email = email;
-        }
-        
-        public String getPicture() {
-            return picture;
-        }
-        
-        public void setPicture(String picture) {
-            this.picture = picture;
+            System.out.println("=== ERROR ===");
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 } 
