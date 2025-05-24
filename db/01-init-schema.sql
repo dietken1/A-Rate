@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS professors (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(32) NOT NULL,
-    user_id BIGINT COMMENT 'User ID for authentication',
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    user_id BIGINT NULL COMMENT 'User ID for authentication',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS lectures (
