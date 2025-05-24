@@ -1,6 +1,6 @@
-package com.example.arate.lecture.repository;
+package com.example.arate.lectures.repository;
 
-import com.example.arate.lecture.entity.Lecture;
+import com.example.arate.lectures.entity.Lecture;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,6 +1,6 @@
 package com.example.arate.common.exception;
 
-import com.example.arate.lecture.exception.LectureException;
+import com.example.arate.lectures.exception.LectureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

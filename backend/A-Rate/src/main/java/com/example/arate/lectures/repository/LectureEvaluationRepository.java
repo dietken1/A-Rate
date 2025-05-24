@@ -1,6 +1,6 @@
-package com.example.arate.lecture.repository;
+package com.example.arate.lectures.repository;
 
-import com.example.arate.lecture.entity.LectureEvaluation;
+import com.example.arate.lectures.entity.LectureEvaluation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
