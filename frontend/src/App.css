@@ -1,3 +1,9 @@
+@import url(//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSansNeo.css);
+
+* {
+  font-family: "Spoqa Han Sans Neo", "sans-serif";
+}
+
 body {
   text-rendering: optimizeLegibility;
   cursor: default;
@@ -13,10 +19,10 @@ body {
   scrollbar-width: 0; /* Firefox */
 }
 
-@font-face {
-  font-family: "Pretendard-Regular";
-  src: url("https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff")
-    format("woff");
-  font-weight: 400;
-  font-style: normal;
+.progress-bar {
+  background: #8570fe !important;
+}
+
+.Toastify__progress-bar--bg {
+  background: rgba(133, 112, 254, 0.5) !important;
 }

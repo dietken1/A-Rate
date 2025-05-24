@@ -20,7 +20,7 @@ export default {
           success: "#429482",
           error: "#E55D57",
         },
-        primary: "#8570FE",
+        primary: "#003399",
         secondary: {
           blue: "#459CED",
           pink: "#D377F3",
@@ -35,18 +35,27 @@ export default {
       backgroundColor: {
         DEFAULT: "#ECEFF3",
         white: "#FFFFFF",
+        primary: "#003399",
+        gray: "#D3D5DA",
+        card: "#F6F7FA",
+        tag: "#E2F3F0",
+        redtag: "#F9E8E7",
+        system: {
+          success: "#429482",
+          error: "#E55D57",
+        },
       },
       borderColor: {
         DEFAULT: "#D3D5DA",
+        primary: "#003399",
       },
       borderRadius: {
-        circle: "50%",
         lg: "20px",
         md: "12px",
         sm: "8px",
       },
       fontFamily: {
-        pretendard: ["Pretendard Variable", "sans-serif"],
+        spoqa: ["Spoqa Han Sans Neo", "sans-serif"],
       },
       fontWeight: {
         thin: "100",
@@ -63,6 +72,7 @@ export default {
         xl: "24px",
         lg: "20px",
         md: "18px",
+        mmd: "16px",
         sm: "14px",
         xs: "12px",
       },

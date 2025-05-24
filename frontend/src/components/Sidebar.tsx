@@ -5,8 +5,12 @@ const sidebarMenus = [
   { to: "/", icon: "/icons/chart-line-bold.svg", label: "홈" },
   { to: "/rating", icon: "/icons/book-bookmark-bold.svg", label: "강의평가" },
   { to: "/timetable", icon: "/icons/calendar-blank-bold.svg", label: "시간표" },
-  { to: "/resource", icon: "/icons/chats-bold.svg", label: "자료집" },
-  { to: "/mentoring", icon: "/icons/trophy-bold.svg", label: "멘토링" },
+  {
+    to: "/resource",
+    icon: "/icons/folder-notch-open-bold.svg",
+    label: "자료집",
+  },
+  { to: "/mentoring", icon: "/icons/chats-bold.svg", label: "멘토링" },
   { to: "/activity", icon: "/icons/trophy-bold.svg", label: "대외활동" },
 ];
 
@@ -52,7 +56,7 @@ const SidebarButton = ({
       to={to}
       className={`flex items-center gap-[14px] w-[238px] text-start p-[12px] rounded-md ${
         isClicked ? "bg-white font-bold" : ""
-      } hover:bg-white duration-fast`}
+      } hover:bg-gray duration-fast`}
     >
       {children}
     </Component>
