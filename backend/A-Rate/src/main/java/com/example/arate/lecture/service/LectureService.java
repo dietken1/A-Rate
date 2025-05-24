@@ -6,8 +6,8 @@ import com.example.arate.lecture.entity.Lecture;
 import com.example.arate.lecture.exception.LectureException;
 import com.example.arate.lecture.repository.LectureEvaluationRepository;
 import com.example.arate.lecture.repository.LectureRepository;
-import com.example.arate.user.entity.User;
-import com.example.arate.user.repository.UserRepository;
+import com.example.arate.users.entity.User;
+import com.example.arate.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,7 +37,7 @@ public class LectureService {
                 lecture.getTitle(),
                 professor.getName(),
                 lecture.getDepartment(),
-                lectureEvaluationRepository.countByLectureId(lecture.getId()),
+                (int)lectureEvaluationRepository.countByLectureId(lecture.getId()),
                 lectureEvaluationRepository.getAverageDeliveryScore(lecture.getId())
             );
         });
