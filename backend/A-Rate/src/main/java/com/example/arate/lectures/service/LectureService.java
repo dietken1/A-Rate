@@ -7,6 +7,8 @@ import com.example.arate.lectures.entity.Lecture;
 import com.example.arate.lectures.exception.LectureException;
 import com.example.arate.lectures.repository.LectureEvaluationRepository;
 import com.example.arate.lectures.repository.LectureRepository;
+import com.example.arate.professors.entity.Professor;
+import com.example.arate.professors.repository.ProfessorRepository;
 import com.example.arate.users.entity.User;
 import com.example.arate.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class LectureService {
     private final LectureEvaluationService lectureEvaluationService;
     private final LectureEvaluationRepository lectureEvaluationRepository;
     private final UserRepository userRepository;
+    private final ProfessorRepository professorRepository;
     private final EnrollmentService enrollmentService;
 
     public Page<LectureResponse> getLectures(String department, Long professorId, int page, int size) {
@@ -56,15 +59,14 @@ public class LectureService {
         );
         
         return lectures.map(lecture -> {
-            User professor = userRepository.findById(lecture.getProfessorId())
-                    .orElseThrow(() -> new LectureException.LectureNotFoundException());
+            Professor professor = lecture.getProfessor();
             
             return new LectureResponse(
                 lecture.getId(),
                 lecture.getTitle(),
                 professor.getName(),
                 lecture.getDepartment(),
-                Math.toIntExact(lectureEvaluationRepository.countByLectureId(lecture.getId())),
+                (int) lectureEvaluationRepository.countByLecture_Id(lecture.getId()),
                 lectureEvaluationRepository.getAverageDeliveryScore(lecture.getId())
             );
         });
@@ -78,8 +80,7 @@ public class LectureService {
         Lecture lecture = lectureRepository.findById(lectureId)
                 .orElseThrow(LectureException.LectureNotFoundException::new);
 
-        User professor = userRepository.findById(lecture.getProfessorId())
-                .orElseThrow(() -> new LectureException.LectureNotFoundException());
+        Professor professor = lecture.getProfessor();
 
         boolean hasWrittenEvaluation = userId != null && 
                 enrollmentService.canViewEvaluations(userId);
@@ -88,7 +89,7 @@ public class LectureService {
             lecture.getId(),
             lecture.getTitle(),
             new LectureDetailResponse.ProfessorInfo(
-                lecture.getProfessorId(),
+                professor.getId(),
                 professor.getName(),
                 lecture.getDepartment()
             ),
@@ -106,10 +107,9 @@ public class LectureService {
         List<Lecture> allLectures = lectureRepository.findAll();
         
         return allLectures.stream()
-                .filter(lecture -> lectureEvaluationRepository.countByLectureId(lecture.getId()) >= 3)
+                .filter(lecture -> lectureEvaluationRepository.countByLecture_Id(lecture.getId()) >= 3)
                 .map(lecture -> {
-                    User professor = userRepository.findById(lecture.getProfessorId())
-                            .orElse(null);
+                    Professor professor = lecture.getProfessor();
                     if (professor == null) return null;
                     
                     return new LectureResponse(
@@ -117,7 +117,7 @@ public class LectureService {
                         lecture.getTitle(),
                         professor.getName(),
                         lecture.getDepartment(),
-                        Math.toIntExact(lectureEvaluationRepository.countByLectureId(lecture.getId())),
+                        (int) lectureEvaluationRepository.countByLecture_Id(lecture.getId()),
                         lectureEvaluationRepository.getAverageDeliveryScore(lecture.getId())
                     );
                 })
@@ -135,10 +135,9 @@ public class LectureService {
         List<Lecture> allLectures = lectureRepository.findAll();
         
         return allLectures.stream()
-                .filter(lecture -> lectureEvaluationRepository.countByLectureId(lecture.getId()) >= 3)
+                .filter(lecture -> lectureEvaluationRepository.countByLecture_Id(lecture.getId()) >= 3)
                 .map(lecture -> {
-                    User professor = userRepository.findById(lecture.getProfessorId())
-                            .orElse(null);
+                    Professor professor = lecture.getProfessor();
                     if (professor == null) return null;
                     
                     return new LectureResponse(
@@ -146,7 +145,7 @@ public class LectureService {
                         lecture.getTitle(),
                         professor.getName(),
                         lecture.getDepartment(),
-                        Math.toIntExact(lectureEvaluationRepository.countByLectureId(lecture.getId())),
+                        (int) lectureEvaluationRepository.countByLecture_Id(lecture.getId()),
                         lectureEvaluationRepository.getAverageDeliveryScore(lecture.getId())
                     );
                 })

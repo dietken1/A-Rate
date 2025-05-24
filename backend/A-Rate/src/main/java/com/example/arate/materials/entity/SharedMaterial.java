@@ -1,5 +1,7 @@
 package com.example.arate.materials.entity;
 
+import com.example.arate.users.entity.User;
+import com.example.arate.lectures.entity.Lecture;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,11 +20,13 @@ public class SharedMaterial {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "uploader_id", nullable = false)
-    private Long uploaderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uploader_id", referencedColumnName = "id", nullable = false)
+    private User uploader;
     
-    @Column(name = "lecture_id", nullable = false)
-    private Long lectureId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lecture_id", referencedColumnName = "id", nullable = false)
+    private Lecture lecture;
     
     private String title;
     

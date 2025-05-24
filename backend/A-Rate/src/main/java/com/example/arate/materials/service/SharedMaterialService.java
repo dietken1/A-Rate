@@ -58,8 +58,8 @@ public class SharedMaterialService {
         
         // 공유 자료 엔티티 생성
         SharedMaterial sharedMaterial = new SharedMaterial();
-        sharedMaterial.setUploaderId(uploaderId);
-        sharedMaterial.setLectureId(request.getLectureId());
+        sharedMaterial.setUploader(uploader);
+        sharedMaterial.setLecture(lecture);
         sharedMaterial.setTitle(request.getTitle());
         sharedMaterial.setContent(request.getContent());
         sharedMaterial.setFile(request.getFile());
@@ -80,9 +80,9 @@ public class SharedMaterialService {
         
         return new SharedMaterialResponse(
             savedMaterial.getId(),
-            savedMaterial.getUploaderId(),
+            savedMaterial.getUploader().getId(),
             uploader.getName(),
-            savedMaterial.getLectureId(),
+            savedMaterial.getLecture().getId(),
             lecture.getTitle(),
             savedMaterial.getTitle(),
             savedMaterial.getContent(),
@@ -100,12 +100,8 @@ public class SharedMaterialService {
         Lecture lecture = lectureRepository.findById(lectureId)
                 .orElseThrow(LectureException.LectureNotFoundException::new);
         
-        return sharedMaterialRepository.findByLectureId(lectureId, pageable)
+        return sharedMaterialRepository.findByLecture_Id(lectureId, pageable)
                 .map(material -> {
-                    // 업로더 정보 조회
-                    User uploader = userRepository.findById(material.getUploaderId())
-                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-                    
                     // JSON 문자열을 리스트로 변환
                     List<String> tagsList = new ArrayList<>();
                     if (material.getTags() != null && !material.getTags().equals("[]")) {
@@ -118,9 +114,9 @@ public class SharedMaterialService {
                     
                     return new SharedMaterialResponse(
                         material.getId(),
-                        material.getUploaderId(),
-                        uploader.getName(),
-                        material.getLectureId(),
+                        material.getUploader().getId(),
+                        material.getUploader().getName(),
+                        material.getLecture().getId(),
                         lecture.getTitle(),
                         material.getTitle(),
                         material.getContent(),
@@ -138,14 +134,6 @@ public class SharedMaterialService {
         SharedMaterial material = sharedMaterialRepository.findById(materialId)
                 .orElseThrow(() -> new MaterialException.MaterialNotFoundException());
         
-        // 강의 정보 조회
-        Lecture lecture = lectureRepository.findById(material.getLectureId())
-                .orElseThrow(LectureException.LectureNotFoundException::new);
-        
-        // 업로더 정보 조회
-        User uploader = userRepository.findById(material.getUploaderId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        
         // JSON 문자열을 리스트로 변환
         List<String> tagsList = new ArrayList<>();
         if (material.getTags() != null && !material.getTags().equals("[]")) {
@@ -158,10 +146,10 @@ public class SharedMaterialService {
         
         return new SharedMaterialResponse(
             material.getId(),
-            material.getUploaderId(),
-            uploader.getName(),
-            material.getLectureId(),
-            lecture.getTitle(),
+            material.getUploader().getId(),
+            material.getUploader().getName(),
+            material.getLecture().getId(),
+            material.getLecture().getTitle(),
             material.getTitle(),
             material.getContent(),
             material.getFile(),
@@ -179,7 +167,7 @@ public class SharedMaterialService {
                 .orElseThrow(() -> new MaterialException.MaterialNotFoundException());
         
         // 권한 확인
-        if (!material.getUploaderId().equals(userId)) {
+        if (!material.getUploader().getId().equals(userId)) {
             throw new MaterialException.UnauthorizedMaterialException();
         }
         
@@ -208,14 +196,6 @@ public class SharedMaterialService {
         
         SharedMaterial updatedMaterial = sharedMaterialRepository.save(material);
         
-        // 강의 정보 조회
-        Lecture lecture = lectureRepository.findById(updatedMaterial.getLectureId())
-                .orElseThrow(LectureException.LectureNotFoundException::new);
-        
-        // 업로더 정보 조회
-        User uploader = userRepository.findById(updatedMaterial.getUploaderId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        
         // JSON 문자열을 리스트로 변환
         List<String> tagsList = new ArrayList<>();
         if (updatedMaterial.getTags() != null && !updatedMaterial.getTags().equals("[]")) {
@@ -228,10 +208,10 @@ public class SharedMaterialService {
         
         return new SharedMaterialResponse(
             updatedMaterial.getId(),
-            updatedMaterial.getUploaderId(),
-            uploader.getName(),
-            updatedMaterial.getLectureId(),
-            lecture.getTitle(),
+            updatedMaterial.getUploader().getId(),
+            updatedMaterial.getUploader().getName(),
+            updatedMaterial.getLecture().getId(),
+            updatedMaterial.getLecture().getTitle(),
             updatedMaterial.getTitle(),
             updatedMaterial.getContent(),
             updatedMaterial.getFile(),
@@ -249,7 +229,7 @@ public class SharedMaterialService {
                 .orElseThrow(() -> new MaterialException.MaterialNotFoundException());
         
         // 권한 확인
-        if (!material.getUploaderId().equals(userId)) {
+        if (!material.getUploader().getId().equals(userId)) {
             throw new MaterialException.UnauthorizedMaterialException();
         }
         
@@ -257,19 +237,11 @@ public class SharedMaterialService {
     }
     
     /**
-     * 태그로 공유 자료 검색
+     * 태그로 검색
      */
     public Page<SharedMaterialResponse> searchByTag(String tag, Pageable pageable) {
-        return sharedMaterialRepository.findByTag(tag, pageable)
+        return sharedMaterialRepository.findByTagsContaining(tag, pageable)
                 .map(material -> {
-                    // 강의 정보 조회
-                    Lecture lecture = lectureRepository.findById(material.getLectureId())
-                            .orElseThrow(LectureException.LectureNotFoundException::new);
-                    
-                    // 업로더 정보 조회
-                    User uploader = userRepository.findById(material.getUploaderId())
-                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-                    
                     // JSON 문자열을 리스트로 변환
                     List<String> tagsList = new ArrayList<>();
                     if (material.getTags() != null && !material.getTags().equals("[]")) {
@@ -282,10 +254,10 @@ public class SharedMaterialService {
                     
                     return new SharedMaterialResponse(
                         material.getId(),
-                        material.getUploaderId(),
-                        uploader.getName(),
-                        material.getLectureId(),
-                        lecture.getTitle(),
+                        material.getUploader().getId(),
+                        material.getUploader().getName(),
+                        material.getLecture().getId(),
+                        material.getLecture().getTitle(),
                         material.getTitle(),
                         material.getContent(),
                         material.getFile(),
@@ -296,19 +268,11 @@ public class SharedMaterialService {
     }
     
     /**
-     * 키워드로 공유 자료 검색
+     * 키워드로 검색
      */
     public Page<SharedMaterialResponse> searchByKeyword(String keyword, Pageable pageable) {
         return sharedMaterialRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable)
                 .map(material -> {
-                    // 강의 정보 조회
-                    Lecture lecture = lectureRepository.findById(material.getLectureId())
-                            .orElseThrow(LectureException.LectureNotFoundException::new);
-                    
-                    // 업로더 정보 조회
-                    User uploader = userRepository.findById(material.getUploaderId())
-                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-                    
                     // JSON 문자열을 리스트로 변환
                     List<String> tagsList = new ArrayList<>();
                     if (material.getTags() != null && !material.getTags().equals("[]")) {
@@ -321,10 +285,10 @@ public class SharedMaterialService {
                     
                     return new SharedMaterialResponse(
                         material.getId(),
-                        material.getUploaderId(),
-                        uploader.getName(),
-                        material.getLectureId(),
-                        lecture.getTitle(),
+                        material.getUploader().getId(),
+                        material.getUploader().getName(),
+                        material.getLecture().getId(),
+                        material.getLecture().getTitle(),
                         material.getTitle(),
                         material.getContent(),
                         material.getFile(),
@@ -333,46 +297,31 @@ public class SharedMaterialService {
                     );
                 });
     }
-
+    
     /**
-     * 가장 최근에 업로드된 공유자료들을 조회합니다.
-     * 대시보드용으로 사용됩니다.
+     * 최신 공유 자료 조회
      */
     public List<SharedMaterialResponse> getRecentMaterials(int limit) {
-        List<SharedMaterial> materials = sharedMaterialRepository.findTop20ByOrderByCreatedAtDesc();
-        
-        return materials.stream()
+        return sharedMaterialRepository.findTopByOrderByCreatedAtDesc()
+                .stream()
                 .limit(limit)
                 .map(material -> {
-                    // 강의 정보 조회
-                    Lecture lecture = lectureRepository.findById(material.getLectureId())
-                            .orElse(null);
-                    
-                    // 업로더 정보 조회
-                    User uploader = userRepository.findById(material.getUploaderId())
-                            .orElse(null);
-                    
-                    if (lecture == null || uploader == null) {
-                        return null;
-                    }
-                    
                     // JSON 문자열을 리스트로 변환
                     List<String> tagsList = new ArrayList<>();
                     if (material.getTags() != null && !material.getTags().equals("[]")) {
                         try {
                             tagsList = objectMapper.readValue(material.getTags(), List.class);
                         } catch (JsonProcessingException e) {
-                            // 에러 발생 시 빈 리스트로 처리
-                            tagsList = new ArrayList<>();
+                            throw new MaterialException.TagProcessingException(e);
                         }
                     }
                     
                     return new SharedMaterialResponse(
                         material.getId(),
-                        material.getUploaderId(),
-                        uploader.getName(),
-                        material.getLectureId(),
-                        lecture.getTitle(),
+                        material.getUploader().getId(),
+                        material.getUploader().getName(),
+                        material.getLecture().getId(),
+                        material.getLecture().getTitle(),
                         material.getTitle(),
                         material.getContent(),
                         material.getFile(),
@@ -380,7 +329,6 @@ public class SharedMaterialService {
                         material.getCreatedAt()
                     );
                 })
-                .filter(response -> response != null)
-                .collect(ArrayList::new, (list, item) -> list.add(item), (list1, list2) -> list1.addAll(list2));
+                .collect(java.util.stream.Collectors.toList());
     }
 } 

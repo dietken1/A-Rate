@@ -68,14 +68,13 @@ public class AuthController {
         // 2. 토큰 생성
         String token = tokenProvider.createTokenFromUserId(user.getId());
         
-        // 3. 리프레시 토큰 생성 및 저장
-        String refreshToken = tokenProvider.createRefreshToken();
-        refreshTokenService.createRefreshToken(user.getId(), refreshToken);
+        // 3. 리프레시 토큰 생성 및 저장 (수정)
+        RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user.getId());
         
         // 4. 토큰 반환
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", token);
-        response.put("refreshToken", refreshToken);
+        response.put("refreshToken", refreshTokenEntity.getToken());
         response.put("userId", user.getId());
         response.put("userName", user.getName());
         response.put("userEmail", user.getEmail());
