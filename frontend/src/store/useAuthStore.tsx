@@ -14,6 +14,21 @@ const initialState: AuthState = {
   user: null,
 };
 
+/*
+const initialState: AuthState = {
+  user: {
+    token: "",
+    user: {
+      id: 0,
+      name: "",
+      picture: "",
+      role: "STUDENT",
+      isProfileComplete: false,
+    },
+  },
+};
+*/
+
 const useAuthStore = create<AuthStore>()((set) => ({
   ...initialState,
   authorize: (user) =>

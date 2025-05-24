@@ -20,6 +20,9 @@ export default {
           success: "#429482",
           error: "#E55D57",
         },
+        ajou: {
+          gold: "#B28000",
+        },
         primary: "#003399",
         secondary: {
           blue: "#459CED",
@@ -36,6 +39,7 @@ export default {
         DEFAULT: "#ECEFF3",
         white: "#FFFFFF",
         primary: "#003399",
+        primarylight: "#E5E9F2",
         gray: "#D3D5DA",
         card: "#F6F7FA",
         tag: "#E2F3F0",

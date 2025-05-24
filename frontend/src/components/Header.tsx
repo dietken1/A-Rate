@@ -1,3 +1,4 @@
+import { GET_DEFAULT_PROFILE_IMAGE } from "../config";
 import useAuthStore from "../store/useAuthStore";
 
 const Header = () => {
@@ -5,6 +6,7 @@ const Header = () => {
 
   const onClick = () => {
     if (user) {
+      // TODO
     } else {
       window.location.href = `${process.env.REACT_APP_API_URL}/oauth2/authorization/google`;
     }
@@ -13,18 +15,16 @@ const Header = () => {
   return (
     <header className="w-full h-[80px] flex items-center justify-end">
       <button
-        className="rounded-sm bg-white pl-[12px] pr-[18px] py-[6px] hover:bg-gray duration-fast"
+        className="rounded-sm bg-white px-[12px] py-[6px] hover:bg-gray duration-fast"
         onClick={onClick}
       >
         {user ? (
           <div className="flex font-medium text-mmd">
-            {user.user.isProfileComplete && (
-              <img
-                src={user.user.picture}
-                alt="user"
-                className="w-[24px] h-[24px] mr-[6px]"
-              />
-            )}
+            <img
+              src={user.user.picture ?? GET_DEFAULT_PROFILE_IMAGE()}
+              alt="user"
+              className="w-[24px] h-[24px] mr-[6px] object-cover"
+            />
             {user.user.name}
           </div>
         ) : (
@@ -34,7 +34,7 @@ const Header = () => {
               alt="user"
               className="w-[24px] h-[24px] mr-[6px]"
             />
-            구글 로그인
+            <div className="pr-[6px]">구글 로그인</div>
           </div>
         )}
       </button>

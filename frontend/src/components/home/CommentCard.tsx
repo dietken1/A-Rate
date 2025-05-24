@@ -1,8 +1,9 @@
 import ReactTimeAgo from "react-time-ago";
+import { GET_DEFAULT_PROFILE_IMAGE } from "../../config";
 
 interface Comment {
-  profile: string;
-  semester: string;
+  profile?: string;
+  semester?: string;
   lecture_name: string;
   professor_name: string;
   content: string;
@@ -12,38 +13,39 @@ interface Comment {
   is_department_specific?: boolean;
 }
 
-const CommentCard = ({ comment }: { comment: Comment }) => {
+const CommentCard = (comment: Comment) => {
   return (
     <div className="flex flex-col items-start w-full bg-card rounded-md p-[15px] gap-[10px] cursor-pointer">
-      <div className="flex w-full items-center gap-[6px]">
+      {/* <div className="flex w-full items-center gap-[6px]">
         <Tag tag={`${comment.semester}학기`} />
         {comment.is_department_specific && <Tag tag="전공" />}
-      </div>
+      </div>*/}
       <div className="w-full">
         <div className="flex w-full items-center gap-[10px]">
-          <div className="font-semibold text-md flex-1">
+          <div className="flex-1 font-semibold text-md">
             {comment.lecture_name.length > 10
               ? comment.lecture_name.slice(0, 10) + "..."
               : comment.lecture_name}
           </div>
-          <div className="font-regular text-sm">
+          <div className="text-sm font-regular">
             {comment.professor_name}
             <span className="text-xs"> 교수님</span>
           </div>
         </div>
-        <div className="font-regular text-xs text-gray-600">
+        <div className="text-xs text-gray-600 font-regular">
           {comment.content.length > 30
             ? comment.content.slice(0, 30) + "..."
             : comment.content}
         </div>
       </div>
-      <div className="flex w-full items-center justify-between">
+      <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-[6px]">
           <img
-            src={comment.profile}
+            src={comment.profile ?? GET_DEFAULT_PROFILE_IMAGE()}
             alt={comment.writer}
-            className="w-[18px] h-[18px] rounded-full"
+            className="w-[18px] h-[18px] rounded-full object-cover"
           />
+
           <div className="text-xs font-bold">{comment.writer}</div>
           <div className="ml-[12px] text-xs font-semilight">
             <ReactTimeAgo date={comment.created_at} />
@@ -56,7 +58,7 @@ const CommentCard = ({ comment }: { comment: Comment }) => {
             className="w-[18px] h-[18px]"
           />
           <div className="text-xs font-semilight">
-            {comment.rating.toFixed(1)}/4.5
+            {comment.rating.toFixed(1)}/5.0
           </div>
         </div>
       </div>

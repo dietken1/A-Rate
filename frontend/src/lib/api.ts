@@ -31,7 +31,7 @@ export function post<T>(url: string, body: any, options?: RequestInit) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(options?.headers || {}),
+      ...(options && options.headers ? options.headers : {}),
     },
     body: JSON.stringify(body),
   });

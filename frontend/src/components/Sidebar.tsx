@@ -3,7 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 
 const sidebarMenus = [
   { to: "/", icon: "/icons/chart-line-bold.svg", label: "홈" },
-  { to: "/rating", icon: "/icons/book-bookmark-bold.svg", label: "강의평가" },
+  {
+    to: "/rating",
+    icon: "/icons/book-bookmark-bold.svg",
+    label: "강의평가",
+  },
   { to: "/timetable", icon: "/icons/calendar-blank-bold.svg", label: "시간표" },
   {
     to: "/resource",
@@ -21,11 +25,16 @@ const Sidebar = ({ className }: { className?: string }) => {
     <div
       className={`w-[258px] h-full flex flex-col items-center gap-1 p-1 ${className}`}
     >
-      <Logo className="px-[20px] my-[30px] w-full" />
+      <Link to="/" className="w-full">
+        <Logo className="px-[20px] my-[30px] w-full" />
+      </Link>
       {sidebarMenus.map((menu) => (
         <SidebarButton
           key={menu.to}
-          isClicked={location.pathname === menu.to}
+          isClicked={
+            location.pathname === menu.to ||
+            (location.pathname.startsWith(menu.to) && menu.to !== "/")
+          }
           as={Link}
           to={menu.to}
         >

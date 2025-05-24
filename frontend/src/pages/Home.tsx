@@ -2,8 +2,17 @@ import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import CommentCard from "../components/home/CommentCard";
 import RatingCard from "../components/home/RatingCard";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
+import Dropdown from "../components/Dropdown";
+import React, { useEffect } from "react";
+import { DEPARTMENTS, LECTURE_TYPES } from "../config";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse, get } from "../lib/api";
+import SummaryInfo, {
+  SummaryEvaluationInfo,
+  SummaryLectureInfo,
+} from "../types/SummaryInfo";
 
 const Home = () => {
   const { user } = useAuthStore();
@@ -27,19 +36,40 @@ const Home = () => {
   );
 };
 
-const Body = () => (
-  <div className="flex w-full gap-[20px]">
-    <div className="flex flex-col flex-[2] gap-[20px]">
-      <TimeTable />
-      <RecentRatings />
+const Body = () => {
+  const [datas, setDatas] = React.useState<SummaryInfo | null>(null);
+  const { data, refetch } = useQuery<ApiResponse<SummaryInfo>>({
+    queryKey: ["summary"],
+    queryFn: () => get<SummaryInfo>(`/api/v1/dashboard/summary`),
+    enabled: false, // 최초에는 자동 실행 안 함
+    retry: false,
+  });
+
+  // 최초 1회만 실행
+  useEffect(() => {
+    refetch();
+  }, []);
+
+  useEffect(() => {
+    if (data && data.success && data.data) {
+      setDatas(data.data);
+    }
+  }, [data]);
+
+  return (
+    <div className="flex w-full gap-[20px]">
+      <div className="flex flex-col flex-[2] gap-[20px]">
+        <TimeTable />
+        <RecentRatings data={datas?.recentEvaluations} />
+      </div>
+      <div className="flex flex-col flex-1 gap-[20px]">
+        <Search />
+        <SideRating1 data={datas?.topRatedLectures} />
+        <SideRating2 data={datas?.bottomRatedLectures} />
+      </div>
     </div>
-    <div className="flex flex-col flex-1 gap-[20px]">
-      <Search />
-      <SideRating1 />
-      <SideRating2 />
-    </div>
-  </div>
-);
+  );
+};
 
 const TimeTable = () => (
   <Container className="flex flex-col gap-[16px] items-center justify-center h-[200px]">
@@ -49,26 +79,15 @@ const TimeTable = () => (
       className="w-[50px] h-[50px]"
     />
     <div className="text-sm text-gray-600">시간표를 등록해주세요.</div>
-    <button className="text-sm rounded-sm bg-white text-primary border-[1px] border-primary px-[12px] py-[6px] hover:bg-gray duration-fast">
-      시간표 등록하기
-    </button>
+    <Link to="/timetable">
+      <button className="text-sm rounded-sm bg-white text-primary border-[1px] border-primary px-[12px] py-[6px] hover:bg-gray duration-fast">
+        시간표 등록하기
+      </button>
+    </Link>
   </Container>
 );
 
-const RecentRatings = () => {
-  const mockingCardData = {
-    profile: "/icons/google.svg",
-    semester: "2023-1",
-    lecture_name: "프로그래밍 기초",
-    professor_name: "홍길동",
-    content:
-      "이 강의는 정말 유익했습니다. 교수님도 친절하시고, 수업 내용도 알차요.",
-    rating: 4.5,
-    writer: "user123",
-    created_at: new Date("2023-10-01"),
-    is_department_specific: true,
-  };
-
+const RecentRatings = ({ data }: { data?: SummaryEvaluationInfo[] }) => {
   return (
     <Container className="h-[600px]">
       <div className="flex justify-between">
@@ -82,10 +101,17 @@ const RecentRatings = () => {
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-[10px] p-[10px]">
-        <CommentCard comment={mockingCardData} />
-        <CommentCard comment={mockingCardData} />
-        <CommentCard comment={mockingCardData} />
-        <CommentCard comment={mockingCardData} />
+        {data?.map((evaluation) => (
+          <CommentCard
+            key={evaluation.id}
+            lecture_name={evaluation.lecture.title}
+            professor_name={evaluation.lecture.professor}
+            content={evaluation.content}
+            rating={3.0}
+            writer={"익명"}
+            created_at={evaluation.createdAt}
+          />
+        ))}
       </div>
       <div className="flex justify-between mt-[10px]">
         <div className="text-lg font-medium">최근 등록된 자료집</div>
@@ -101,33 +127,63 @@ const RecentRatings = () => {
   );
 };
 
-const Search = () => (
-  <Container className="flex flex-col gap-[10px] h-[200px]">
-    <div className="flex items-center gap-2">
-      <div className="text-lg font-medium">과목 검색하기</div>
-      <img
-        src="/icons/magnifying-glass-bold.svg"
-        alt="search"
-        className="w-[22px] h-[22px]"
-      />
-    </div>
-    <input
-      type="text"
-      placeholder="과목명을 입력해주세요."
-      className="w-full h-[40px] mt-[10px] text-sm rounded-full border-[1px] border-gray-300 px-[16px] focus:outline-none focus:border-primary duration-fast"
-    />
-    <div className="w-full"></div>
-  </Container>
-);
+const Search = () => {
+  const [departmentValue, setDepartmentValue] = React.useState("전체");
+  const [typeValue, setTypeValue] = React.useState("전체");
+  const [inputValue, setInputValue] = React.useState("");
+  const navigate = useNavigate();
 
-const SideRating1 = () => {
-  const mockingCardData = {
-    profile: "/icons/google.svg",
-    lecture_name: "프로그래밍 기초",
-    professor_name: "홍길동",
-    rating: 4.5,
+  const onSubmit = () => {
+    const params = new URLSearchParams();
+    if (inputValue) params.append("q", inputValue);
+    if (departmentValue && departmentValue !== "전체")
+      params.append("department", departmentValue);
+    if (typeValue && typeValue !== "전체") params.append("type", typeValue);
+    navigate(`/rating?${params.toString()}`);
   };
 
+  return (
+    <Container className="flex flex-col gap-[10px] h-[200px]">
+      <div className="flex items-center gap-2">
+        <div className="text-lg font-medium">과목 검색하기</div>
+        <img
+          src="/icons/magnifying-glass-bold.svg"
+          alt="search"
+          className="w-[22px] h-[22px] cursor-pointer"
+          onClick={onSubmit}
+        />
+      </div>
+      <input
+        type="text"
+        placeholder="과목명을 입력해주세요."
+        className="w-full h-[40px] mt-[10px] text-sm rounded-full border-[1px] border-gray-300 px-[16px] focus:outline-none focus:border-primary duration-fast"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onSubmit();
+          }
+        }}
+      />
+      <div className="flex w-full gap-[8px] mt-[5px]">
+        <Dropdown
+          options={DEPARTMENTS}
+          placeholder="학과"
+          onChange={(value) => setDepartmentValue(value)}
+          value={departmentValue}
+        />
+        <Dropdown
+          options={LECTURE_TYPES}
+          placeholder="교과 구분"
+          onChange={(value) => setTypeValue(value)}
+          value={typeValue}
+        />
+      </div>
+    </Container>
+  );
+};
+
+const SideRating1 = ({ data }: { data?: SummaryLectureInfo[] }) => {
   return (
     <Container className="h-[320px]">
       <div className="flex justify-between">
@@ -141,23 +197,20 @@ const SideRating1 = () => {
         </Link>
       </div>
       <div className="flex flex-col w-full gap-[15px] p-[10px] mt-[10px]">
-        <RatingCard rating={mockingCardData} />
-        <RatingCard rating={mockingCardData} />
-        <RatingCard rating={mockingCardData} />
-        <RatingCard rating={mockingCardData} />
+        {data?.map((lecture) => (
+          <RatingCard
+            key={lecture.id}
+            lecture_name={lecture.title}
+            professor_name={lecture.professor.name}
+            rating={lecture.averageRating}
+          />
+        ))}
       </div>
     </Container>
   );
 };
 
-const SideRating2 = () => {
-  const mockingCardData = {
-    profile: "/icons/google.svg",
-    lecture_name: "프로그래밍 기초",
-    professor_name: "홍길동",
-    rating: 1.5,
-  };
-
+const SideRating2 = ({ data }: { data?: SummaryLectureInfo[] }) => {
   return (
     <Container className="h-[320px]">
       <div className="flex justify-between">
@@ -171,10 +224,14 @@ const SideRating2 = () => {
         </Link>
       </div>
       <div className="flex flex-col w-full gap-[15px] p-[10px] mt-[10px]">
-        <RatingCard rating={mockingCardData} />
-        <RatingCard rating={mockingCardData} />
-        <RatingCard rating={mockingCardData} />
-        <RatingCard rating={mockingCardData} />
+        {data?.map((lecture) => (
+          <RatingCard
+            key={lecture.id}
+            lecture_name={lecture.title}
+            professor_name={lecture.professor.name}
+            rating={lecture.averageRating}
+          />
+        ))}
       </div>
     </Container>
   );
