@@ -14,6 +14,8 @@ public class UpdatedEvaluationResponse {
     private String content;
     private Scores scores;
     private AssignmentInfo assignment;
+    private String examType;
+    private Boolean teamProject;
     private LocalDateTime updatedAt;
 
     @Getter

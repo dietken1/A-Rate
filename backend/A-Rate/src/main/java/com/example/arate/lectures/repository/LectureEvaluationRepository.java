@@ -7,14 +7,24 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface LectureEvaluationRepository extends JpaRepository<LectureEvaluation, Long> {
     List<LectureEvaluation> findByLectureId(Long lectureId);
+    
+    List<LectureEvaluation> findByUserId(Long userId);
+    
+    Optional<LectureEvaluation> findByLectureIdAndUserId(Long lectureId, Long userId);
 
     boolean existsByLectureIdAndUserId(Long lectureId, Long userId);
+    
+    long countByUserId(Long userId);
 
     long countByLectureId(Long lectureId);
+
+    // 최신 강의평 조회 (대시보드용)
+    List<LectureEvaluation> findTop20ByOrderByCreatedAtDesc();
 
     @Query("SELECT COALESCE(AVG(e.deliveryScore), 0) FROM LectureEvaluation e WHERE e.lectureId = :lectureId")
     double getAverageDeliveryScore(@Param("lectureId") Long lectureId);

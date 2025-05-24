@@ -1,5 +1,6 @@
 package com.example.arate.lectures.service;
 
+import com.example.arate.enrollments.service.EnrollmentService;
 import com.example.arate.lectures.dto.*;
 import com.example.arate.lectures.entity.LectureEvaluation;
 import com.example.arate.lectures.exception.LectureException;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class LectureEvaluationService {
     private final LectureEvaluationRepository lectureEvaluationRepository;
     private final LectureRepository lectureRepository;
+    private final EnrollmentService enrollmentService;
 
     @Transactional
     public EvaluationResponse createEvaluation(Long lectureId, Long userId, CreateEvaluationRequest request) {
@@ -27,7 +29,12 @@ public class LectureEvaluationService {
             throw new LectureException.LectureNotFoundException();
         }
 
-        // 이미 평가를 작성했는지 확인
+        // 수강 인증 확인 (관리자에게 승인받은 학생만 강의평 작성 가능)
+        if (!enrollmentService.canWriteEvaluation(userId, lectureId)) {
+            throw new LectureException.NotCertifiedEnrollmentException();
+        }
+
+        // 이미 평가를 작성했는지 확인 (한 강의당 한 개의 평가만 작성 가능)
         if (lectureEvaluationRepository.existsByLectureIdAndUserId(lectureId, userId)) {
             throw new LectureException.DuplicateEvaluationException();
         }
@@ -44,6 +51,8 @@ public class LectureEvaluationService {
         evaluation.setDifficultyScore(request.getDifficultyScore());
         evaluation.setAssignmentAmount(request.getAssignmentAmount());
         evaluation.setAssignmentDifficulty(request.getAssignmentDifficulty());
+        evaluation.setExam(request.getExam());
+        evaluation.setTeamProject(request.getTeamProject());
         evaluation.setSemester(request.getSemester());
         evaluation.setCreatedAt(LocalDateTime.now());
         evaluation.setUpdatedAt(LocalDateTime.now());
@@ -65,6 +74,8 @@ public class LectureEvaluationService {
                 savedEvaluation.getAssignmentAmount().name(),
                 savedEvaluation.getAssignmentDifficulty().name()
             ),
+            savedEvaluation.getExam() != null ? savedEvaluation.getExam().name() : null,
+            savedEvaluation.getTeamProject(),
             savedEvaluation.getCreatedAt(),
             new EvaluationResponse.AuthorInfo(
                 savedEvaluation.getUserId(),
@@ -120,6 +131,12 @@ public class LectureEvaluationService {
         if (request.getAssignmentDifficulty() != null) {
             evaluation.setAssignmentDifficulty(request.getAssignmentDifficulty());
         }
+        if (request.getExam() != null) {
+            evaluation.setExam(request.getExam());
+        }
+        if (request.getTeamProject() != null) {
+            evaluation.setTeamProject(request.getTeamProject());
+        }
 
         evaluation.setUpdatedAt(LocalDateTime.now());
         LectureEvaluation updatedEvaluation = lectureEvaluationRepository.save(evaluation);
@@ -139,33 +156,56 @@ public class LectureEvaluationService {
                 updatedEvaluation.getAssignmentAmount().name(),
                 updatedEvaluation.getAssignmentDifficulty().name()
             ),
+            updatedEvaluation.getExam() != null ? updatedEvaluation.getExam().name() : null,
+            updatedEvaluation.getTeamProject(),
             updatedEvaluation.getUpdatedAt()
         );
     }
 
     public List<LectureDetailResponse.EvaluationInfo> getEvaluationsByLectureId(Long lectureId) {
-        return lectureEvaluationRepository.findByLectureId(lectureId).stream()
-            .map(evaluation -> new LectureDetailResponse.EvaluationInfo(
-                evaluation.getId(),
-                evaluation.getContent(),
-                new LectureDetailResponse.Scores(
-                    evaluation.getDeliveryScore(),
-                    evaluation.getExpertiseScore(),
-                    evaluation.getGenerosityScore(),
-                    evaluation.getEffectivenessScore(),
-                    evaluation.getCharacterScore(),
-                    evaluation.getDifficultyScore()
-                ),
-                new LectureDetailResponse.AssignmentInfo(
-                    evaluation.getAssignmentAmount().name(),
-                    evaluation.getAssignmentDifficulty().name()
-                ),
-                evaluation.getCreatedAt(),
-                new LectureDetailResponse.AuthorInfo(
-                    evaluation.getUserId(),
-                    "User Nickname" // TODO: 사용자 닉네임 조회 로직 추가 필요
-                )
-            ))
+        return getEvaluationsByLectureId(lectureId, true); // 기본값은 모든 강의평 조회 가능
+    }
+
+    public List<LectureDetailResponse.EvaluationInfo> getEvaluationsByLectureId(Long lectureId, boolean hasWrittenEvaluation) {
+        List<LectureEvaluation> evaluations = lectureEvaluationRepository.findByLectureId(lectureId);
+        
+        return evaluations.stream()
+            .map(evaluation -> {
+                // 첫 번째 강의평이거나 사용자가 강의평을 작성한 경우 전체 내용 공개
+                boolean isFirstEvaluation = evaluations.indexOf(evaluation) == 0;
+                boolean showFullContent = hasWrittenEvaluation || isFirstEvaluation;
+                boolean isRestricted = !showFullContent;
+                
+                String content = showFullContent ? evaluation.getContent() : 
+                    "강의평을 작성하면 더 많은 후기를 볼 수 있습니다. (맛보기)";
+                
+                String authorNickname = showFullContent ? "User Nickname" : "익명";
+                
+                return new LectureDetailResponse.EvaluationInfo(
+                    evaluation.getId(),
+                    content,
+                    new LectureDetailResponse.Scores(
+                        evaluation.getDeliveryScore(),
+                        evaluation.getExpertiseScore(),
+                        evaluation.getGenerosityScore(),
+                        evaluation.getEffectivenessScore(),
+                        evaluation.getCharacterScore(),
+                        evaluation.getDifficultyScore()
+                    ),
+                    new LectureDetailResponse.AssignmentInfo(
+                        evaluation.getAssignmentAmount().name(),
+                        evaluation.getAssignmentDifficulty().name()
+                    ),
+                    evaluation.getExam() != null ? evaluation.getExam().name() : null,
+                    evaluation.getTeamProject(),
+                    showFullContent ? evaluation.getCreatedAt() : null,
+                    new LectureDetailResponse.AuthorInfo(
+                        showFullContent ? evaluation.getUserId() : null,
+                        authorNickname
+                    ),
+                    isRestricted
+                );
+            })
             .collect(Collectors.toList());
     }
 
@@ -178,5 +218,87 @@ public class LectureEvaluationService {
             lectureEvaluationRepository.getAverageCharacterScore(lectureId),
             lectureEvaluationRepository.getAverageDifficultyScore(lectureId)
         );
+    }
+    
+    @Transactional
+    public void deleteEvaluation(Long lectureId, Long evaluationId, Long userId) {
+        // 평가 존재 여부 및 작성자 확인
+        LectureEvaluation evaluation = lectureEvaluationRepository.findById(evaluationId)
+                .orElseThrow(LectureException.EvaluationNotFoundException::new);
+
+        if (!evaluation.getUserId().equals(userId)) {
+            throw new LectureException.UnauthorizedEvaluationException();
+        }
+
+        if (!evaluation.getLectureId().equals(lectureId)) {
+            throw new LectureException.InvalidEvaluationException();
+        }
+        
+        lectureEvaluationRepository.delete(evaluation);
+    }
+
+    public List<EvaluationResponse> getEvaluationsByUserId(Long userId) {
+        List<LectureEvaluation> evaluations = lectureEvaluationRepository.findByUserId(userId);
+        
+        return evaluations.stream()
+            .map(evaluation -> new EvaluationResponse(
+                evaluation.getId(),
+                evaluation.getContent(),
+                new EvaluationResponse.Scores(
+                    evaluation.getDeliveryScore(),
+                    evaluation.getExpertiseScore(),
+                    evaluation.getGenerosityScore(),
+                    evaluation.getEffectivenessScore(),
+                    evaluation.getCharacterScore(),
+                    evaluation.getDifficultyScore()
+                ),
+                new EvaluationResponse.AssignmentInfo(
+                    evaluation.getAssignmentAmount().name(),
+                    evaluation.getAssignmentDifficulty().name()
+                ),
+                evaluation.getExam() != null ? evaluation.getExam().name() : null,
+                evaluation.getTeamProject(),
+                evaluation.getCreatedAt(),
+                new EvaluationResponse.AuthorInfo(
+                    evaluation.getUserId(),
+                    "User Nickname" // TODO: 사용자 닉네임 조회 로직 추가 필요
+                )
+            ))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 가장 최근에 작성된 강의평들을 조회합니다.
+     * 대시보드용으로 사용됩니다.
+     */
+    public List<EvaluationResponse> getRecentEvaluations(int limit) {
+        List<LectureEvaluation> evaluations = lectureEvaluationRepository.findTop20ByOrderByCreatedAtDesc();
+        
+        return evaluations.stream()
+            .limit(limit)
+            .map(evaluation -> new EvaluationResponse(
+                evaluation.getId(),
+                evaluation.getContent(),
+                new EvaluationResponse.Scores(
+                    evaluation.getDeliveryScore(),
+                    evaluation.getExpertiseScore(),
+                    evaluation.getGenerosityScore(),
+                    evaluation.getEffectivenessScore(),
+                    evaluation.getCharacterScore(),
+                    evaluation.getDifficultyScore()
+                ),
+                new EvaluationResponse.AssignmentInfo(
+                    evaluation.getAssignmentAmount().name(),
+                    evaluation.getAssignmentDifficulty().name()
+                ),
+                evaluation.getExam() != null ? evaluation.getExam().name() : null,
+                evaluation.getTeamProject(),
+                evaluation.getCreatedAt(),
+                new EvaluationResponse.AuthorInfo(
+                    evaluation.getUserId(),
+                    "User Nickname" // TODO: 사용자 닉네임 조회 로직 추가 필요
+                )
+            ))
+            .collect(Collectors.toList());
     }
 } 

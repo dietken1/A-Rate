@@ -25,4 +25,7 @@ public class Lecture {
     private Long professorRefId;
 
     private String department;
+    
+    @Column(name = "course_type")
+    private String courseType; // 학수구분: "전공필수", "전공선택", "교양필수", "교양선택" 등
 } 
