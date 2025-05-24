@@ -1,6 +1,5 @@
 package com.example.arate.professors.entity;
 
-import com.example.arate.users.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +17,4 @@ public class Professor {
 
     @Column(name = "name", nullable = false, length = 32)
     private String name;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User user;
 } 
