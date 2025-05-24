@@ -8,20 +8,32 @@ USE arate_db;
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
-    email VARCHAR(100) NOT NULL COMMENT 'School email',
+    email VARCHAR(100) NOT NULL UNIQUE COMMENT 'School email',
     nickname VARCHAR(50) NOT NULL COMMENT 'Nickname',
     department VARCHAR(255),
     role ENUM('STUDENT', 'PROFESSOR', 'ADMIN') NOT NULL COMMENT 'User role',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Registration time',
     student_number VARCHAR(255),
-    profile_image VARCHAR(255)
+    profile_image VARCHAR(255),
+    image_url VARCHAR(500),
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    password VARCHAR(255),
+    provider ENUM('LOCAL', 'GOOGLE'),
+    provider_id VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Registration time',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expiry_date DATETIME NOT NULL,
+    user_id BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS professors (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(32) NOT NULL,
-    user_id BIGINT NULL COMMENT 'User ID for authentication',
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    name VARCHAR(32) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS lectures (
