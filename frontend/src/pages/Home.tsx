@@ -9,11 +9,11 @@ const Home = () => {
   const { user } = useAuthStore();
 
   return (
-    <div className="flex h-screen w-full h-full bg">
+    <div className="flex w-full h-screen bg">
       <Sidebar />
-      <div className="flex-1 overflow-auto py-5 px-8">
+      <div className="flex-1 px-8 py-5 overflow-auto">
         <Header />
-        <div className="font-bold text-xl">
+        <div className="text-xl font-bold">
           {user
             ? `${user.user.name}님, 안녕하세요!`
             : "로그인하고 원하는 강의평을 마음껏 찾아보세요."}
