@@ -1,4 +1,4 @@
-import { GET_DEFAULT_PROFILE_IMAGE } from "../config";
+import { API_URL, GET_DEFAULT_PROFILE_IMAGE } from "../config";
 import useAuthStore from "../store/useAuthStore";
 
 const Header = () => {
@@ -8,7 +8,7 @@ const Header = () => {
     if (user) {
       // TODO
     } else {
-      window.location.href = `${process.env.REACT_APP_API_URL}/oauth2/authorization/google`;
+      window.location.href = `${API_URL}/oauth2/authorization/google?redirect_environment=local`;
     }
   };
 

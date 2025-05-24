@@ -22,7 +22,7 @@ const RatingDetail = () => {
 
   const { data } = useQuery<ApiResponse<LectureDetailInfo>>({
     queryKey: ["lecture_detail", lectureId],
-    queryFn: () => get<LectureDetailInfo>(`/api/v1/lectures/${lectureId}`),
+    queryFn: () => get<LectureDetailInfo>(`/v1/lectures/${lectureId}`),
     enabled: !!lectureId, // lectureId가 있을 때만 실행
     retry: false,
   });

@@ -62,7 +62,7 @@ const Body = (props: BodyProps) => {
     queryKey: ["query_lectures", department, query, courseType],
     queryFn: () => {
       const header = user?.token;
-      let url = `/api/v1/lectures?query=${query}&size=10&courseType=${courseType}&department=${department}`;
+      let url = `/v1/lectures?query=${query}&size=10&courseType=${courseType}&department=${department}`;
       return get<Lectures>(url, {
         headers: {
           Authorization: `Bearer ${header}`,
@@ -92,6 +92,13 @@ const Body = (props: BodyProps) => {
       setSearchResults(null);
     }
   }, [data]);
+
+  useEffect(() => {
+    const hasQuery =
+      props.query || props.department || props.courseType ? true : false;
+    setExpanded(hasQuery);
+    // 실제 API 호출 시 주석 해제
+  }, [props.courseType, props.department, props.query]); // 절대 비워
 
   const onExpand = () => {
     setExpanded(!expanded);

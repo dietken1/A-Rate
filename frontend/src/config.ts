@@ -4,3 +4,4 @@ export const GET_DEFAULT_PROFILE_IMAGE = () => {
   const rand = Math.floor(Math.random() * 4) + 1;
   return `/images/profiles/${rand}.png`;
 };
+export const API_URL = "http://localhost:8080/api";

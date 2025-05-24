@@ -56,7 +56,7 @@ const RatingModal = ({
     queryKey: ["submit_rating", survayData],
     queryFn: () =>
       post<LectureDetailInfo>(
-        `/api/v1/lectures/${lectureId}/evaluations`,
+        `/v1/lectures/${lectureId}/evaluations`,
         survayData
       ),
     enabled: false, // lectureId가 있을 때만 실행

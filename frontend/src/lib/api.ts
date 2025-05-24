@@ -1,3 +1,5 @@
+import { API_URL } from "../config";
+
 export type ApiSuccess<T> = { success: true; data: T };
 export type ApiFailure = { success: false; error: string };
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
@@ -6,7 +8,7 @@ export async function fetcher<T>(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<ApiResponse<T>> {
-  const url = `${process.env.REACT_APP_API_URL}${input}`;
+  const url = `${API_URL}${input}`;
   const res = await fetch(url, init);
   if (!res.ok) {
     return {

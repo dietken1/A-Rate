@@ -40,7 +40,7 @@ const Body = () => {
   const [datas, setDatas] = React.useState<SummaryInfo | null>(null);
   const { data, refetch } = useQuery<ApiResponse<SummaryInfo>>({
     queryKey: ["summary"],
-    queryFn: () => get<SummaryInfo>(`/api/v1/dashboard/summary`),
+    queryFn: () => get<SummaryInfo>(`/v1/dashboard/summary`),
     enabled: false, // 최초에는 자동 실행 안 함
     retry: false,
   });
