@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uptime Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+    <script src="/src/uptime.js"></script>
+</head>
+
+<body>
+    <h1>Uptime Status</h1>
+    <button onclick="fetchUptime()">Check Uptime</button>
+    <div id="status">Click the button to check uptime.</div>
+
+</body>
+
+</html>

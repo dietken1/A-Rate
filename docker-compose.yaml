@@ -1,0 +1,86 @@
+networks:
+  mybridge:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+services:
+  db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - ./db/data:/var/lib/mysql
+    networks:
+      - mybridge
+    env_file:
+      - .env
+
+  back:
+    build:
+      context: ./backend/A-Rate
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/A-Rate/logs:/app/logs
+    networks:
+      - mybridge
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+  front:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - mybridge
+    depends_on:
+      - back
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl/:/etc/nginx/ssl/
+      - ./ssl/certbot/www:/var/www/certbot
+    depends_on:
+      - front
+      - back
+    networks:
+      - mybridge
+    restart: always
+
+  certbot:
+    image: certbot/dns-cloudflare:latest
+    container_name: certbot
+    env_file:
+      - .env
+    volumes:
+      - ./ssl/certbot/conf:/etc/letsencrypt
+      - ./ssl/certbot/www:/var/www/certbot
+      - ./ssl/cloudflare.ini:/etc/letsencrypt/cloudflare.ini:ro
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini --dns-cloudflare-propagation-seconds 60; sleep 12h & wait $${!}; done;'"
+    restart: always
