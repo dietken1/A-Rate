@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@nivo/radar": "^0.99.0",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tanstack/react-query": "^5.76.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -11,12 +14,20 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "javascript-time-ago": "^2.5.11",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^6.30.1",
+    "react-modal-sheet": "^4.4.0",
+    "react-rating-stars-component": "^2.2.0",
+    "react-router-dom": "^7.6.0",
     "react-scripts": "5.0.1",
+    "react-time-ago": "^7.3.3",
+    "react-toastify": "^11.0.5",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "uuid": "^11.1.0",
+    "web-vitals": "^2.1.4",
+    "zustand": "^5.0.5"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -41,5 +52,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17"
   }
 }
