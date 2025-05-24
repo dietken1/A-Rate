@@ -37,4 +37,6 @@ public class UpdateEvaluationRequest {
 
     private LectureEvaluation.AssignmentAmount assignmentAmount;
     private LectureEvaluation.AssignmentDifficulty assignmentDifficulty;
+    private LectureEvaluation.ExamType exam;
+    private Boolean teamProject;
 } 

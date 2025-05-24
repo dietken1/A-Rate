@@ -51,6 +51,13 @@ public class LectureEvaluation {
     @Enumerated(EnumType.STRING)
     @Column(name = "assignment_difficulty")
     private AssignmentDifficulty assignmentDifficulty;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "exam")
+    private ExamType exam;
+    
+    @Column(name = "team_project")
+    private Boolean teamProject;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -64,5 +71,9 @@ public class LectureEvaluation {
 
     public enum AssignmentDifficulty {
         EASY, NORMAL, HARD
+    }
+    
+    public enum ExamType {
+        MIDTERM, FINAL, BOTH
     }
 } 
