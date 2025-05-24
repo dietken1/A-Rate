@@ -37,7 +37,7 @@ public class LectureService {
                 lecture.getTitle(),
                 professor.getName(),
                 lecture.getDepartment(),
-                lectureEvaluationRepository.countByLectureId(lecture.getId()),
+                (int) lectureEvaluationRepository.countByLectureId(lecture.getId()),
                 lectureEvaluationRepository.getAverageDeliveryScore(lecture.getId())
             );
         });

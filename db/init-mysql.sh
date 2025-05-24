@@ -1,6 +1,10 @@
 #!/bin/bash
 
 mysql -u root -p${MYSQL_ROOT_PASSWORD} << EOF
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET character_set_connection=utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS arate_db;
 USE arate_db;
 
@@ -18,6 +22,7 @@ CREATE TABLE users (
 
 CREATE TABLE professors (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(32) NOT NULL,
     user_id INT COMMENT 'User ID for authentication'
 );
 
@@ -26,7 +31,7 @@ CREATE TABLE lectures (
     professor_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
     department VARCHAR(100),
-    course_type ENUM('교선', '교필', '일선', '전기', '전선', '전필') NOT NULL COMMENT 'Course classification',
+    course_type ENUM('1','2','3','4','5','6') NOT NULL COMMENT 'Course classification',
     is_english_lecture BOOLEAN DEFAULT FALSE COMMENT 'Whether the lecture is in English',
     FOREIGN KEY (professor_id) REFERENCES professors(id)
 );
@@ -46,7 +51,7 @@ CREATE TABLE lecture_evaluations (
     assignment_amount ENUM('NONE', 'FEW', 'NORMAL', 'MANY'),
     assignment_difficulty ENUM('EASY', 'NORMAL', 'HARD'),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    exam ENUM('midterm', 'final', 'both'),
+    exam ENUM('MIDTERM', 'FINAL', 'BOTH'),
     team_project BOOLEAN,
     updated_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES users(id),
