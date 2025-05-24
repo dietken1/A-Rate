@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "lectures")
 @Getter
@@ -32,6 +35,9 @@ public class Lecture {
 
     @Column(name = "is_english_lecture")
     private Boolean isEnglishLecture = false;
+
+    @OneToMany(mappedBy = "lecture", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LectureEvaluation> evaluations = new ArrayList<>();
 
     public enum CourseType {
         // DB에 저장된 값과 일치하도록 수정
