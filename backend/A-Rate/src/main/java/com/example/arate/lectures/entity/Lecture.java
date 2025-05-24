@@ -1,5 +1,6 @@
 package com.example.arate.lectures.entity;
 
+import com.example.arate.professors.entity.Professor;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,8 +16,9 @@ public class Lecture {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "professor_id", nullable = false)
-    private Long professorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "professor_id", referencedColumnName = "id", nullable = false)
+    private Professor professor;
 
     @Column(nullable = false, length = 100)
     private String title;
@@ -25,15 +27,16 @@ public class Lecture {
     private String department;
 
     @Column(name = "course_type", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CourseTypeConverter.class)
     private CourseType courseType;
 
     @Column(name = "is_english_lecture")
     private Boolean isEnglishLecture = false;
 
     public enum CourseType {
+        // DB에 저장된 값과 일치하도록 수정
         교선("1"),
-        교필("2"),
+        교필("2"), 
         일선("3"),
         전기("4"),
         전선("5"),
@@ -56,6 +59,19 @@ public class Lecture {
                 }
             }
             return 교선; // 기본값
+        }
+    }
+
+    @Converter
+    public static class CourseTypeConverter implements AttributeConverter<CourseType, String> {
+        @Override
+        public String convertToDatabaseColumn(CourseType courseType) {
+            return courseType != null ? courseType.getValue() : null;
+        }
+
+        @Override
+        public CourseType convertToEntityAttribute(String dbData) {
+            return dbData != null ? CourseType.fromValue(dbData) : null;
         }
     }
 

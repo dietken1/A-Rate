@@ -1,6 +1,7 @@
 package com.example.arate.lectures.repository;
 
 import com.example.arate.lectures.entity.Lecture;
+import com.example.arate.professors.entity.Professor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,12 +15,12 @@ public interface LectureRepository extends JpaRepository<Lecture, Long> {
      * keyword는 교수명과 과목명을 OR 조건으로 검색 (부분 검색)
      */
     @Query("SELECT l FROM Lecture l " +
-           "JOIN User u ON l.professorId = u.id " +
+           "JOIN l.professor p " +
            "WHERE " +
-           "(:keyword IS NULL OR l.title LIKE %:keyword% OR u.name LIKE %:keyword%) AND " +
+           "(:keyword IS NULL OR l.title LIKE %:keyword% OR p.name LIKE %:keyword%) AND " +
            "(:department IS NULL OR :department = 'all' OR l.department = :department) AND " +
            "(:courseType IS NULL OR :courseType = 'all' OR l.courseType = :courseType) AND " +
-           "(:professorId IS NULL OR l.professorId = :professorId)")
+           "(:professorId IS NULL OR l.professor.id = :professorId)")
     Page<Lecture> findLecturesWithFilters(
             @Param("keyword") String keyword,
             @Param("department") String department,

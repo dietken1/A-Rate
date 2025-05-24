@@ -53,8 +53,8 @@ public class ReplyService {
         
         // 댓글 엔티티 생성
         Reply reply = new Reply();
-        reply.setEvaluationId(request.getEvaluationId());
-        reply.setAuthorId(authorId);
+        reply.setEvaluation(evaluation);
+        reply.setAuthor(author);
         reply.setContent(request.getContent());
         reply.setCreatedAt(LocalDateTime.now());
         
@@ -62,8 +62,8 @@ public class ReplyService {
         
         return new ReplyResponse(
             savedReply.getId(),
-            savedReply.getEvaluationId(),
-            savedReply.getAuthorId(),
+            savedReply.getEvaluation().getId(),
+            savedReply.getAuthor().getId(),
             author.getName(),
             savedReply.getContent(),
             savedReply.getCreatedAt(),
@@ -81,19 +81,15 @@ public class ReplyService {
         }
         
         // 해당 강의의 모든 평가에 달린 댓글들을 수집
-        return lectureEvaluationRepository.findByLectureId(lectureId)
+        return lectureEvaluationRepository.findByLecture_Id(lectureId)
                 .stream()
-                .flatMap(evaluation -> replyRepository.findByEvaluationId(evaluation.getId()).stream())
+                .flatMap(evaluation -> replyRepository.findByEvaluation_Id(evaluation.getId()).stream())
                 .map(reply -> {
-                    // 작성자 정보 조회
-                    User author = userRepository.findById(reply.getAuthorId())
-                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-                    
                     return new ReplyResponse(
                         reply.getId(),
-                        reply.getEvaluationId(),
-                        reply.getAuthorId(),
-                        author.getName(),
+                        reply.getEvaluation().getId(),
+                        reply.getAuthor().getId(),
+                        reply.getAuthor().getName(),
                         reply.getContent(),
                         reply.getCreatedAt(),
                         reply.getUpdatedAt()
@@ -111,17 +107,13 @@ public class ReplyService {
             throw new EnrollmentException.NoEvaluationWrittenException();
         }
         
-        return replyRepository.findByEvaluationId(evaluationId).stream()
+        return replyRepository.findByEvaluation_Id(evaluationId).stream()
                 .map(reply -> {
-                    // 작성자 정보 조회
-                    User author = userRepository.findById(reply.getAuthorId())
-                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-                    
                     return new ReplyResponse(
                         reply.getId(),
-                        reply.getEvaluationId(),
-                        reply.getAuthorId(),
-                        author.getName(),
+                        reply.getEvaluation().getId(),
+                        reply.getAuthor().getId(),
+                        reply.getAuthor().getName(),
                         reply.getContent(),
                         reply.getCreatedAt(),
                         reply.getUpdatedAt()
@@ -142,15 +134,11 @@ public class ReplyService {
         Reply reply = replyRepository.findById(replyId)
                 .orElseThrow(() -> new ReplyException.ReplyNotFoundException());
         
-        // 작성자 정보 조회
-        User author = userRepository.findById(reply.getAuthorId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        
         return new ReplyResponse(
             reply.getId(),
-            reply.getEvaluationId(),
-            reply.getAuthorId(),
-            author.getName(),
+            reply.getEvaluation().getId(),
+            reply.getAuthor().getId(),
+            reply.getAuthor().getName(),
             reply.getContent(),
             reply.getCreatedAt(),
             reply.getUpdatedAt()
@@ -166,7 +154,7 @@ public class ReplyService {
                 .orElseThrow(() -> new ReplyException.ReplyNotFoundException());
         
         // 권한 확인
-        if (!reply.getAuthorId().equals(userId)) {
+        if (!reply.getAuthor().getId().equals(userId)) {
             throw new ReplyException.UnauthorizedReplyException();
         }
         
@@ -176,15 +164,11 @@ public class ReplyService {
         
         Reply updatedReply = replyRepository.save(reply);
         
-        // 작성자 정보 조회
-        User author = userRepository.findById(updatedReply.getAuthorId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        
         return new ReplyResponse(
             updatedReply.getId(),
-            updatedReply.getEvaluationId(),
-            updatedReply.getAuthorId(),
-            author.getName(),
+            updatedReply.getEvaluation().getId(),
+            updatedReply.getAuthor().getId(),
+            updatedReply.getAuthor().getName(),
             updatedReply.getContent(),
             updatedReply.getCreatedAt(),
             updatedReply.getUpdatedAt()
@@ -200,10 +184,27 @@ public class ReplyService {
                 .orElseThrow(() -> new ReplyException.ReplyNotFoundException());
         
         // 권한 확인
-        if (!reply.getAuthorId().equals(userId)) {
+        if (!reply.getAuthor().getId().equals(userId)) {
             throw new ReplyException.UnauthorizedReplyException();
         }
         
         replyRepository.delete(reply);
+    }
+    
+    /**
+     * 사용자가 작성한 댓글 목록 조회
+     */
+    public List<ReplyResponse> getRepliesByUser(Long userId) {
+        return replyRepository.findByAuthor_Id(userId).stream()
+                .map(reply -> new ReplyResponse(
+                    reply.getId(),
+                    reply.getEvaluation().getId(),
+                    reply.getAuthor().getId(),
+                    reply.getAuthor().getName(),
+                    reply.getContent(),
+                    reply.getCreatedAt(),
+                    reply.getUpdatedAt()
+                ))
+                .collect(Collectors.toList());
     }
 } 

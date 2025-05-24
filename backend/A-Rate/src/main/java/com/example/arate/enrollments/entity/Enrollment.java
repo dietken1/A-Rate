@@ -1,5 +1,7 @@
 package com.example.arate.enrollments.entity;
 
+import com.example.arate.users.entity.User;
+import com.example.arate.lectures.entity.Lecture;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,11 +20,13 @@ public class Enrollment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "student_id", nullable = false)
-    private Long studentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", referencedColumnName = "id", nullable = false)
+    private User student;
     
-    @Column(name = "lecture_id", nullable = false)
-    private Long lectureId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lecture_id", referencedColumnName = "id", nullable = false)
+    private Lecture lecture;
     
     @Column(name = "certification_image")
     private String certificationImage;

@@ -1,5 +1,6 @@
 package com.example.arate.lectures.entity;
 
+import com.example.arate.users.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,11 +18,13 @@ public class LectureEvaluation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    private User user;
 
-    @Column(name = "lecture_id", nullable = false)
-    private Long lectureId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lecture_id", referencedColumnName = "id", nullable = false)
+    private Lecture lecture;
 
     private String semester;
     private String content;

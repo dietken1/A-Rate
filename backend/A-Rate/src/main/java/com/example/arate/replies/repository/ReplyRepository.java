@@ -11,11 +11,11 @@ import java.util.List;
 @Repository
 public interface ReplyRepository extends JpaRepository<Reply, Long> {
     
-    List<Reply> findByEvaluationId(Long evaluationId);
+    List<Reply> findByEvaluation_Id(Long evaluationId);
     
-    Page<Reply> findByEvaluationId(Long evaluationId, Pageable pageable);
+    Page<Reply> findByEvaluation_Id(Long evaluationId, Pageable pageable);
     
-    List<Reply> findByAuthorId(Long authorId);
+    List<Reply> findByAuthor_Id(Long authorId);
     
-    boolean existsByEvaluationIdAndAuthorId(Long evaluationId, Long authorId);
+    boolean existsByEvaluation_IdAndAuthor_Id(Long evaluationId, Long authorId);
 } 

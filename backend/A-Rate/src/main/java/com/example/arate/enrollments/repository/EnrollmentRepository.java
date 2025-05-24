@@ -14,17 +14,17 @@ import java.util.Optional;
 @Repository
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     
-    List<Enrollment> findByStudentId(Long studentId);
+    List<Enrollment> findByStudent_Id(Long studentId);
     
-    List<Enrollment> findByLectureId(Long lectureId);
+    List<Enrollment> findByLecture_Id(Long lectureId);
     
-    Optional<Enrollment> findByStudentIdAndLectureId(Long studentId, Long lectureId);
+    Optional<Enrollment> findByStudent_IdAndLecture_Id(Long studentId, Long lectureId);
     
-    boolean existsByStudentIdAndLectureId(Long studentId, Long lectureId);
+    boolean existsByStudent_IdAndLecture_Id(Long studentId, Long lectureId);
     
-    boolean existsByStudentIdAndLectureIdAndIsCertifiedTrue(Long studentId, Long lectureId);
+    boolean existsByStudent_IdAndLecture_IdAndIsCertifiedTrue(Long studentId, Long lectureId);
     
-    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.studentId = :studentId AND e.isCertified = true")
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.student.id = :studentId AND e.isCertified = true")
     long countCertifiedEnrollmentsByStudentId(@Param("studentId") Long studentId);
     
     Page<Enrollment> findByIsCertified(Boolean isCertified, Pageable pageable);

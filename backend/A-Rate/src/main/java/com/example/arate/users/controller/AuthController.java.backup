@@ -186,30 +186,8 @@ public class AuthController {
     })
     @GetMapping("/me")
     public ResponseEntity<Object> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        if (userPrincipal == null) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "인증이 필요합니다.");
-            return ResponseEntity.status(401).body(response);
-        }
-        
-        // 사용자 ID로 데이터베이스에서 최신 사용자 정보 조회
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("name", user.getName());
-        response.put("email", user.getEmail());
-        response.put("nickname", user.getNickname());
-        response.put("role", user.getRole() != null ? user.getRole().toString() : null);
-        response.put("department", user.getDepartment());
-        response.put("studentNumber", user.getStudentNumber());
-        response.put("profileImage", user.getProfileImage());
-        response.put("imageUrl", user.getImageUrl());
-        response.put("createdAt", user.getCreatedAt());
-        response.put("isActive", true); // 현재 활성 상태로 설정
-        
-        return ResponseEntity.ok(response);
+        // TODO: 실제 구현 필요
+        return ResponseEntity.ok("사용자 정보 조회 기능 구현 필요");
     }
 
     @Operation(
@@ -284,73 +262,6 @@ public class AuthController {
     }
 
     @Operation(
-        summary = "개발용 JWT 토큰 발급",
-        description = """
-            🛠️ **개발 환경에서 테스트용 JWT 토큰을 발급합니다.**
-            
-            ### ⚠️ 개발 전용
-            - 프로덕션 환경에서는 비활성화 권장
-            - 인증이 필요한 API 테스트 용도
-            - 데이터베이스의 첫 번째 사용자로 토큰 생성
-            
-            ### 🔑 발급되는 토큰
-            - **accessToken**: API 호출용 JWT 토큰
-            - **refreshToken**: 토큰 갱신용
-            - **사용자 정보**: 토큰에 연결된 사용자 정보
-            """
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "✅ 토큰 발급 성공",
-            content = @Content(examples = @ExampleObject(value = """
-            {
-              "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-              "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-              "userId": 1,
-              "userName": "테스트사용자",
-              "userEmail": "test@ajou.ac.kr"
-            }
-            """))),
-        @ApiResponse(responseCode = "500", description = "❌ 토큰 발급 실패")
-    })
-    @GetMapping("/dev-token")
-    public ResponseEntity<?> getDevToken() {
-        try {
-            System.out.println("=== DEV TOKEN START ===");
-            
-            // 1. 사용자 수 확인
-            long userCount = userRepository.count();
-            System.out.println("사용자 수: " + userCount);
-            
-            if (userCount == 0) {
-                return ResponseEntity.ok("사용자가 없습니다.");
-            }
-            
-            // 2. 첫 번째 사용자 조회
-            User user = userRepository.findAll().stream().findFirst()
-                    .orElseThrow(() -> new RuntimeException("사용자가 존재하지 않습니다."));
-            System.out.println("사용자 찾음: " + user.getId() + ", " + user.getName());
-            
-            // 3. 간단한 응답 반환 (일단 토큰 생성 제외)
-            Map<String, Object> response = new HashMap<>();
-            response.put("userId", user.getId());
-            response.put("userName", user.getName());
-            response.put("userEmail", user.getEmail());
-            response.put("message", "사용자 조회 성공");
-            
-            System.out.println("=== DEV TOKEN SUCCESS ===");
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            System.out.println("=== DEV TOKEN ERROR ===");
-            e.printStackTrace();
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
-            errorResponse.put("message", "토큰 발급 중 오류가 발생했습니다.");
-            return ResponseEntity.status(500).body(errorResponse);
-        }
-    }
-
-    @Operation(
         summary = "개발용 토큰 테스트",
         description = """
             🛠️ **개발 환경에서 토큰 없이 API 접근을 테스트합니다.**
@@ -376,58 +287,8 @@ public class AuthController {
             }
             """)))
     })
-    @GetMapping("/simple-test")
-    public ResponseEntity<String> simpleTest() {
-        System.out.println("=== SIMPLE TEST CALLED ===");
-        return ResponseEntity.ok("간단한 테스트 성공!");
-    }
-
     @GetMapping("/test")
-    public ResponseEntity<?> test(@RequestParam(name = "token", required = false) String tokenParam) {
-        try {
-            if ("true".equals(tokenParam)) {
-                // 토큰 발급 로직
-                System.out.println("=== TOKEN REQUEST START ===");
-                
-                // 1. 사용자 수 확인
-                long userCount = userRepository.count();
-                System.out.println("사용자 수: " + userCount);
-                
-                if (userCount == 0) {
-                    return ResponseEntity.ok("사용자가 없습니다.");
-                }
-                
-                // 2. 첫 번째 사용자 조회
-                User user = userRepository.findAll().stream().findFirst()
-                        .orElseThrow(() -> new RuntimeException("사용자가 존재하지 않습니다."));
-                System.out.println("사용자 찾음: " + user.getId() + ", " + user.getName());
-                
-                // 3. 토큰 생성
-                String token = tokenProvider.createTokenFromUserId(user.getId());
-                
-                // 4. 리프레시 토큰 생성
-                RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user.getId());
-                
-                // 5. 토큰 반환
-                Map<String, Object> response = new HashMap<>();
-                response.put("accessToken", token);
-                response.put("refreshToken", refreshTokenEntity.getToken());
-                response.put("userId", user.getId());
-                response.put("userName", user.getName());
-                response.put("userEmail", user.getEmail());
-                
-                System.out.println("=== TOKEN SUCCESS ===");
-                return ResponseEntity.ok(response);
-            } else {
-                System.out.println("=== TEST METHOD CALLED ===");
-                return ResponseEntity.ok("API가 정상적으로 작동합니다. ?token=true 추가하면 토큰 발급");
-            }
-        } catch (Exception e) {
-            System.out.println("=== ERROR ===");
-            e.printStackTrace();
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
-        }
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("API가 정상적으로 작동합니다.");
     }
 } 

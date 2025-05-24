@@ -42,15 +42,18 @@ public class EnrollmentService {
         Lecture lecture = lectureRepository.findById(request.getLectureId())
                 .orElseThrow(LectureException.LectureNotFoundException::new);
         
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
         // 이미 인증 요청한 경우 예외 발생
-        if (enrollmentRepository.existsByStudentIdAndLectureId(studentId, request.getLectureId())) {
+        if (enrollmentRepository.existsByStudent_IdAndLecture_Id(studentId, request.getLectureId())) {
             throw new EnrollmentException.DuplicateEnrollmentException();
         }
         
         // 인증 요청 생성
         Enrollment enrollment = new Enrollment();
-        enrollment.setStudentId(studentId);
-        enrollment.setLectureId(request.getLectureId());
+        enrollment.setStudent(student);
+        enrollment.setLecture(lecture);
         enrollment.setCertificationImage(request.getCertificationImage());
         enrollment.setGrade(request.getGrade());
         enrollment.setSemester(request.getSemester());
@@ -61,8 +64,8 @@ public class EnrollmentService {
         
         return new EnrollmentResponse(
             savedEnrollment.getId(),
-            savedEnrollment.getStudentId(),
-            savedEnrollment.getLectureId(),
+            savedEnrollment.getStudent().getId(),
+            savedEnrollment.getLecture().getId(),
             lecture.getTitle(),
             savedEnrollment.getCertificationImage(),
             savedEnrollment.getGrade(),
@@ -104,15 +107,11 @@ public class EnrollmentService {
         
         Enrollment updatedEnrollment = enrollmentRepository.save(enrollment);
         
-        // 강의 정보 조회
-        Lecture lecture = lectureRepository.findById(updatedEnrollment.getLectureId())
-                .orElseThrow(LectureException.LectureNotFoundException::new);
-        
         return new EnrollmentResponse(
             updatedEnrollment.getId(),
-            updatedEnrollment.getStudentId(),
-            updatedEnrollment.getLectureId(),
-            lecture.getTitle(),
+            updatedEnrollment.getStudent().getId(),
+            updatedEnrollment.getLecture().getId(),
+            updatedEnrollment.getLecture().getTitle(),
             updatedEnrollment.getCertificationImage(),
             updatedEnrollment.getGrade(),
             updatedEnrollment.getIsCertified(),
@@ -126,16 +125,13 @@ public class EnrollmentService {
      * 학생의 인증 요청 목록 조회
      */
     public List<EnrollmentResponse> getEnrollmentsByStudentId(Long studentId) {
-        return enrollmentRepository.findByStudentId(studentId).stream()
+        return enrollmentRepository.findByStudent_Id(studentId).stream()
                 .map(enrollment -> {
-                    Lecture lecture = lectureRepository.findById(enrollment.getLectureId())
-                            .orElseThrow(LectureException.LectureNotFoundException::new);
-                    
                     return new EnrollmentResponse(
                         enrollment.getId(),
-                        enrollment.getStudentId(),
-                        enrollment.getLectureId(),
-                        lecture.getTitle(),
+                        enrollment.getStudent().getId(),
+                        enrollment.getLecture().getId(),
+                        enrollment.getLecture().getTitle(),
                         enrollment.getCertificationImage(),
                         enrollment.getGrade(),
                         enrollment.getIsCertified(),
@@ -154,14 +150,11 @@ public class EnrollmentService {
         Pageable pageable = PageRequest.of(page, size);
         return enrollmentRepository.findByIsCertified(false, pageable)
                 .map(enrollment -> {
-                    Lecture lecture = lectureRepository.findById(enrollment.getLectureId())
-                            .orElseThrow(LectureException.LectureNotFoundException::new);
-                    
                     return new EnrollmentResponse(
                         enrollment.getId(),
-                        enrollment.getStudentId(),
-                        enrollment.getLectureId(),
-                        lecture.getTitle(),
+                        enrollment.getStudent().getId(),
+                        enrollment.getLecture().getId(),
+                        enrollment.getLecture().getTitle(),
                         enrollment.getCertificationImage(),
                         enrollment.getGrade(),
                         enrollment.getIsCertified(),
@@ -181,7 +174,7 @@ public class EnrollmentService {
                 .orElseThrow(() -> new EnrollmentException.EnrollmentNotFoundException());
         
         // 요청자와 소유자가 일치하는지 확인
-        if (!enrollment.getStudentId().equals(studentId)) {
+        if (!enrollment.getStudent().getId().equals(studentId)) {
             throw new EnrollmentException.UnauthorizedEnrollmentException();
         }
         
@@ -192,7 +185,7 @@ public class EnrollmentService {
      * 강의평 작성 자격 확인 (인증된 수강생인지)
      */
     public boolean canWriteEvaluation(Long studentId, Long lectureId) {
-        return enrollmentRepository.existsByStudentIdAndLectureIdAndIsCertifiedTrue(studentId, lectureId);
+        return enrollmentRepository.existsByStudent_IdAndLecture_IdAndIsCertifiedTrue(studentId, lectureId);
     }
     
     /**
@@ -200,6 +193,6 @@ public class EnrollmentService {
      * 한 개 이상의 강의평을 작성했으면 true 반환
      */
     public boolean canViewEvaluations(Long userId) {
-        return lectureEvaluationRepository.countByUserId(userId) > 0;
+        return lectureEvaluationRepository.countByUser_Id(userId) > 0;
     }
 } 

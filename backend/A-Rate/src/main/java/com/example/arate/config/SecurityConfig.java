@@ -68,7 +68,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/error", "/favicon.ico").permitAll()
                 .requestMatchers("/static/**").permitAll()
                 .requestMatchers("*.png", "*.gif", "*.svg", "*.jpg", "*.html", "*.css", "*.js").permitAll()
-                .requestMatchers("/auth/**", "/google-auth/**", "/api/auth/test", "/api/auth/test-token", "/api/auth/refresh", "/login/oauth2/code/**").permitAll()
+                .requestMatchers("/auth/**", "/google-auth/**", "/api/auth/test", "/api/auth/simple-test", "/api/auth/test-token", "/api/auth/dev-token", "/api/auth/refresh", "/login/oauth2/code/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/lectures/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/dashboard/**").permitAll()

@@ -2,10 +2,13 @@ package com.example.arate.lectures.service;
 
 import com.example.arate.enrollments.service.EnrollmentService;
 import com.example.arate.lectures.dto.*;
+import com.example.arate.lectures.entity.Lecture;
 import com.example.arate.lectures.entity.LectureEvaluation;
 import com.example.arate.lectures.exception.LectureException;
 import com.example.arate.lectures.repository.LectureEvaluationRepository;
 import com.example.arate.lectures.repository.LectureRepository;
+import com.example.arate.users.entity.User;
+import com.example.arate.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,14 +23,17 @@ import java.util.stream.Collectors;
 public class LectureEvaluationService {
     private final LectureEvaluationRepository lectureEvaluationRepository;
     private final LectureRepository lectureRepository;
+    private final UserRepository userRepository;
     private final EnrollmentService enrollmentService;
 
     @Transactional
     public EvaluationResponse createEvaluation(Long lectureId, Long userId, CreateEvaluationRequest request) {
         // 강의 존재 여부 확인
-        if (!lectureRepository.existsById(lectureId)) {
-            throw new LectureException.LectureNotFoundException();
-        }
+        Lecture lecture = lectureRepository.findById(lectureId)
+                .orElseThrow(LectureException.LectureNotFoundException::new);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 수강 인증 확인 (관리자에게 승인받은 학생만 강의평 작성 가능)
         if (!enrollmentService.canWriteEvaluation(userId, lectureId)) {
@@ -35,13 +41,13 @@ public class LectureEvaluationService {
         }
 
         // 이미 평가를 작성했는지 확인 (한 강의당 한 개의 평가만 작성 가능)
-        if (lectureEvaluationRepository.existsByLectureIdAndUserId(lectureId, userId)) {
+        if (lectureEvaluationRepository.existsByLecture_IdAndUser_Id(lectureId, userId)) {
             throw new LectureException.DuplicateEvaluationException();
         }
 
         LectureEvaluation evaluation = new LectureEvaluation();
-        evaluation.setLectureId(lectureId);
-        evaluation.setUserId(userId);
+        evaluation.setLecture(lecture);
+        evaluation.setUser(user);
         evaluation.setContent(request.getContent());
         evaluation.setDeliveryScore(request.getDeliveryScore());
         evaluation.setExpertiseScore(request.getExpertiseScore());
@@ -78,8 +84,8 @@ public class LectureEvaluationService {
             savedEvaluation.getTeamProject(),
             savedEvaluation.getCreatedAt(),
             new EvaluationResponse.AuthorInfo(
-                savedEvaluation.getUserId(),
-                "User Nickname" // TODO: 사용자 닉네임 조회 로직 추가 필요
+                savedEvaluation.getUser().getId(),
+                savedEvaluation.getUser().getNickname()
             )
         );
     }
@@ -95,11 +101,11 @@ public class LectureEvaluationService {
         LectureEvaluation evaluation = lectureEvaluationRepository.findById(evaluationId)
                 .orElseThrow(LectureException.EvaluationNotFoundException::new);
 
-        if (!evaluation.getUserId().equals(userId)) {
+        if (!evaluation.getUser().getId().equals(userId)) {
             throw new LectureException.UnauthorizedEvaluationException();
         }
 
-        if (!evaluation.getLectureId().equals(lectureId)) {
+        if (!evaluation.getLecture().getId().equals(lectureId)) {
             throw new LectureException.InvalidEvaluationException();
         }
 
@@ -167,7 +173,7 @@ public class LectureEvaluationService {
     }
 
     public List<LectureDetailResponse.EvaluationInfo> getEvaluationsByLectureId(Long lectureId, boolean hasWrittenEvaluation) {
-        List<LectureEvaluation> evaluations = lectureEvaluationRepository.findByLectureId(lectureId);
+        List<LectureEvaluation> evaluations = lectureEvaluationRepository.findByLecture_Id(lectureId);
         
         return evaluations.stream()
             .map(evaluation -> {
@@ -179,7 +185,7 @@ public class LectureEvaluationService {
                 String content = showFullContent ? evaluation.getContent() : 
                     "강의평을 작성하면 더 많은 후기를 볼 수 있습니다. (맛보기)";
                 
-                String authorNickname = showFullContent ? "User Nickname" : "익명";
+                String authorNickname = showFullContent ? evaluation.getUser().getNickname() : "익명";
                 
                 return new LectureDetailResponse.EvaluationInfo(
                     evaluation.getId(),
@@ -198,9 +204,9 @@ public class LectureEvaluationService {
                     ),
                     evaluation.getExam() != null ? evaluation.getExam().name() : null,
                     evaluation.getTeamProject(),
-                    showFullContent ? evaluation.getCreatedAt() : null,
+                    evaluation.getCreatedAt(),
                     new LectureDetailResponse.AuthorInfo(
-                        showFullContent ? evaluation.getUserId() : null,
+                        showFullContent ? evaluation.getUser().getId() : null,
                         authorNickname
                     ),
                     isRestricted
@@ -226,11 +232,11 @@ public class LectureEvaluationService {
         LectureEvaluation evaluation = lectureEvaluationRepository.findById(evaluationId)
                 .orElseThrow(LectureException.EvaluationNotFoundException::new);
 
-        if (!evaluation.getUserId().equals(userId)) {
+        if (!evaluation.getUser().getId().equals(userId)) {
             throw new LectureException.UnauthorizedEvaluationException();
         }
 
-        if (!evaluation.getLectureId().equals(lectureId)) {
+        if (!evaluation.getLecture().getId().equals(lectureId)) {
             throw new LectureException.InvalidEvaluationException();
         }
         
@@ -238,7 +244,7 @@ public class LectureEvaluationService {
     }
 
     public List<EvaluationResponse> getEvaluationsByUserId(Long userId) {
-        List<LectureEvaluation> evaluations = lectureEvaluationRepository.findByUserId(userId);
+        List<LectureEvaluation> evaluations = lectureEvaluationRepository.findByUser_Id(userId);
         
         return evaluations.stream()
             .map(evaluation -> new EvaluationResponse(
@@ -260,8 +266,8 @@ public class LectureEvaluationService {
                 evaluation.getTeamProject(),
                 evaluation.getCreatedAt(),
                 new EvaluationResponse.AuthorInfo(
-                    evaluation.getUserId(),
-                    "User Nickname" // TODO: 사용자 닉네임 조회 로직 추가 필요
+                    evaluation.getUser().getId(),
+                    evaluation.getUser().getNickname()
                 )
             ))
             .collect(Collectors.toList());
@@ -295,8 +301,8 @@ public class LectureEvaluationService {
                 evaluation.getTeamProject(),
                 evaluation.getCreatedAt(),
                 new EvaluationResponse.AuthorInfo(
-                    evaluation.getUserId(),
-                    "User Nickname" // TODO: 사용자 닉네임 조회 로직 추가 필요
+                    evaluation.getUser().getId(),
+                    evaluation.getUser().getNickname()
                 )
             ))
             .collect(Collectors.toList());
