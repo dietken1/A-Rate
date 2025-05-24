@@ -25,7 +25,9 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - REACT_APP_API_URL=http://localhost:8080
+      - PORT=3000
+      - WDS_SOCKET_PORT=0
     depends_on:
       - backend
 
