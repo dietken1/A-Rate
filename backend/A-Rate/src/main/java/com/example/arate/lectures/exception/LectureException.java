@@ -1,4 +1,4 @@
-package com.example.arate.lecture.exception;
+package com.example.arate.lectures.exception;
 
 public class LectureException extends RuntimeException {
     public LectureException(String message) {

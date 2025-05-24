@@ -1,4 +1,4 @@
-package com.example.arate.lecture.dto;
+package com.example.arate.lectures.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
