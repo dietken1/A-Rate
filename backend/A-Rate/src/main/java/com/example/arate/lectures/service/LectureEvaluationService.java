@@ -1,10 +1,10 @@
-package com.example.arate.lecture.service;
+package com.example.arate.lectures.service;
 
-import com.example.arate.lecture.dto.*;
-import com.example.arate.lecture.entity.LectureEvaluation;
-import com.example.arate.lecture.exception.LectureException;
-import com.example.arate.lecture.repository.LectureEvaluationRepository;
-import com.example.arate.lecture.repository.LectureRepository;
+import com.example.arate.lectures.dto.*;
+import com.example.arate.lectures.entity.LectureEvaluation;
+import com.example.arate.lectures.exception.LectureException;
+import com.example.arate.lectures.repository.LectureEvaluationRepository;
+import com.example.arate.lectures.repository.LectureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

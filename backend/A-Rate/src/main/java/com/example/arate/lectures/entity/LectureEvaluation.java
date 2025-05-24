@@ -1,4 +1,4 @@
-package com.example.arate.lecture.entity;
+package com.example.arate.lectures.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
