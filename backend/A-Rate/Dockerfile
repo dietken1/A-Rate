@@ -8,17 +8,9 @@ RUN apk add --no-cache bash curl
 # Gradle 래퍼와 소스 코드 복사
 COPY . .
 
-# 현재 디렉토리 내용 확인
-RUN echo "=== Current directory contents ===" && \
-    ls -la && \
-    echo "=== Gradle wrapper contents ===" && \
-    ls -la gradlew* && \
-    echo "=== Source directory contents ===" && \
-    ls -la src/
-
 # Gradle 빌드 실행 (상세 로그 출력)
 RUN chmod +x ./gradlew && \
-    ./gradlew clean --info && \
+    ./gradlew clean && \
     ./gradlew bootJar --no-daemon --info --stacktrace
 
 # 빌드 결과 확인
@@ -33,8 +25,8 @@ ENTRYPOINT ["sh", "-c", "\
     echo '=== Java Version ===' && \
     java -version && \
     echo '=== JAR Contents ===' && \
-    jar tf build/libs/A-Rate-0.0.1-SNAPSHOT.jar && \
+    jar tf build/libs/*.jar && \
     echo '=== Main Class Manifest ===' && \
-    unzip -p build/libs/A-Rate-0.0.1-SNAPSHOT.jar META-INF/MANIFEST.MF && \
+    unzip -p build/libs/*.jar META-INF/MANIFEST.MF && \
     echo '=== Starting Application ===' && \
-    java -jar build/libs/A-Rate-0.0.1-SNAPSHOT.jar"]
+    java -jar build/libs/*.jar"]
