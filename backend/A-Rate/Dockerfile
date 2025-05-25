@@ -1,9 +1,9 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
 # 디버깅을 위한 도구 설치
-RUN apk add --no-cache bash curl
+RUN apt-get update && apt-get install -y curl unzip && rm -rf /var/lib/apt/lists/*
 
 # Gradle 래퍼와 소스 코드 복사
 COPY . .
