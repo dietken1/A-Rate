@@ -59,30 +59,37 @@ const Body = (props: BodyProps) => {
   const { user } = useAuthStore();
 
   const { data } = useQuery<ApiResponse<Lectures>>({
-    queryKey: ["query_lectures", department, query, courseType],
+    queryKey: ["query_lectures", props],
     queryFn: () => {
       const header = user?.token;
-      let url = `/v1/lectures?query=${query}&size=10&courseType=${courseType}&department=${department}`;
+      const course = courseType === "전체" ? "all" : courseType;
+      const depart = department === "전체" ? "all" : department;
+
+      const url = `/v1/lectures?keyword=${
+        query ?? ""
+      }&size=10&courseType=${course}&department=${depart}`;
       return get<Lectures>(url, {
         headers: {
           Authorization: `Bearer ${header}`,
         },
       });
     },
-    enabled: !!query || !!department || !!courseType,
+    enabled:
+      props.query !== null ||
+      props.department !== null ||
+      props.courseType !== null,
     retry: false,
   });
 
   useEffect(() => {
-    const hasQuery =
-      props.query || props.department || props.courseType ? true : false;
-    setExpanded(hasQuery);
+    setExpanded(props.department !== null || props.courseType !== null);
     // 실제 API 호출 시 주석 해제
   }, []); // 절대 비워
 
   useEffect(() => {
     if (data) {
       if (data.success) {
+        console.log("강의 검색 결과:", data.data);
         setSearchResults(data.data!);
       } else {
         alert("강의 검색에 실패했습니다.");
@@ -94,11 +101,10 @@ const Body = (props: BodyProps) => {
   }, [data]);
 
   useEffect(() => {
-    const hasQuery =
-      props.query || props.department || props.courseType ? true : false;
+    const hasQuery = props.department || props.courseType ? true : false;
     setExpanded(hasQuery);
     // 실제 API 호출 시 주석 해제
-  }, [props.courseType, props.department, props.query]); // 절대 비워
+  }, [props.department, props.courseType]); // 절대 비워
 
   const onExpand = () => {
     setExpanded(!expanded);
@@ -198,7 +204,7 @@ const Result = ({ lectures }: { lectures: Lectures }) => {
   return (
     <div className="w-full mb-[10px]">
       <div className="text-xl font-bold">
-        강의 검색 결과({lectures.totalElements})
+        강의 검색 결과({lectures.numberOfElements})
       </div>
       <div className="flex flex-col gap-[34px] mt-[18px]">
         {lectures.content.map((lecture) => (
@@ -209,7 +215,6 @@ const Result = ({ lectures }: { lectures: Lectures }) => {
             >
               <div className="flex w-full items-center gap-[6px]">
                 <Tag tag={lecture.department} />
-                <Tag tag={lecture.courseType} />
               </div>
               <div className="flex items-center justify-between gap-[100px]">
                 <div>
@@ -223,9 +228,9 @@ const Result = ({ lectures }: { lectures: Lectures }) => {
                   </div>
                 </div>
                 <div className="flex-1 text-sm text-center text-gray-600 font-regular">
-                  {lecture.bestComment.length > 100
-                    ? lecture.bestComment.slice(0, 100) + "..."
-                    : lecture.bestComment}
+                  이 수업에 대한 더 다양한 강의평을 만나보세요! A:Rate와 함께
+                  수많은 학생들의 의견을 바탕으로 나만의 대학 생활을
+                  설계해보세요.
                 </div>
                 <div>
                   <Score score={lecture.averageScore} />

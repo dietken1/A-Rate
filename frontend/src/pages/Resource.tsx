@@ -20,7 +20,7 @@ const Resource = () => {
       <Sidebar />
       <div className="flex-1 px-8 py-5 overflow-auto">
         <Header />
-        자료집
+        <img src="/images/p2.png" alt="123123" className="-ml-[10px]" />
       </div>
     </div>
   );

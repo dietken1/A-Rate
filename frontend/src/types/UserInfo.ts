@@ -1,10 +1,11 @@
 export default interface AuthResponse {
   token: string;
-  user: {
-    id: number;
-    name: string;
-    picture: string;
-    role: "STUDENT" | "PROFESSOR" | "ADMIN";
-    isProfileComplete: boolean;
-  };
+  user: User;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  profileImage: string;
+  role: "STUDENT" | "PROFESSOR" | "ADMIN";
 }
