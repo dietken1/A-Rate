@@ -1,6 +1,6 @@
 export interface Lectures {
   content: LectureInfo[];
-  totalElements: number;
+  numberOfElements: number;
 }
 
 export default interface LectureInfo {
@@ -9,7 +9,5 @@ export default interface LectureInfo {
   professorName: string;
   evaluationCount: number;
   averageScore: number;
-  courseType: string;
   department: string;
-  bestComment: string;
 }

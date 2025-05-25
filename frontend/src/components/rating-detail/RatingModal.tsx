@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { Sheet } from "react-modal-sheet";
 import { ApiResponse, post } from "../../lib/api";
 import LectureDetailInfo from "../../types/LectureDetailInfo";
-import ReactStars from "react-rating-stars-component";
 
 interface SurveyData {
   content: string;
@@ -50,16 +49,16 @@ const RatingModal = ({
   const [difficulty, setDifficulty] = React.useState<number | null>(null);
   const [content, setContent] = React.useState<string | null>(null);
 
-  const [survayData, setSurvayData] = React.useState<SurveyData | null>(null);
+  const [surveyData, setSurveyData] = React.useState<SurveyData | null>(null);
 
   const { data } = useQuery<ApiResponse<LectureDetailInfo>>({
-    queryKey: ["submit_rating", survayData],
+    queryKey: ["submit_rating", surveyData],
     queryFn: () =>
       post<LectureDetailInfo>(
         `/v1/lectures/${lectureId}/evaluations`,
-        survayData
+        surveyData
       ),
-    enabled: false, // lectureId가 있을 때만 실행
+    enabled: !!surveyData,
     retry: false,
   });
 
@@ -95,7 +94,7 @@ const RatingModal = ({
       ) {
         alert("모든 필드를 입력해주세요.");
         return;
-      } else if (content === null || content.length < 100) {
+      } else if (content === null || content.length < 10) {
         alert("내용을 더 길게 입력해주세요.");
         return;
       }
@@ -118,7 +117,7 @@ const RatingModal = ({
         3: "MIDTERM_FINAL",
       };
 
-      setSurvayData({
+      setSurveyData({
         content: content!,
         deliveryScore: delivery!,
         expertiseScore: expertise!,
@@ -187,47 +186,68 @@ const RatingModal = ({
           )}{" "}
           {stage === 2 && (
             <div className="flex flex-col gap-[15px] my-[5px]">
-              <RatingQuestion
+              <SurveyQuestion
+                values={[1, 2, 3, 4, 5]}
                 label="강의 전달력"
                 value={delivery}
                 onChange={setDelivery}
               />
-              <RatingQuestion
+              <SurveyQuestion
+                values={[1, 2, 3, 4, 5]}
                 label="내용의 실효성"
                 value={effectiveness}
                 onChange={setEffectiveness}
               />
-              <RatingQuestion
+              <SurveyQuestion
+                values={[1, 2, 3, 4, 5]}
                 label="수업의 난이도"
                 value={difficulty}
                 onChange={setDifficulty}
               />
-              <RatingQuestion
+              <SurveyQuestion
+                values={[1, 2, 3, 4, 5]}
                 label="교수님의 전문성"
                 value={expertise}
                 onChange={setExpertise}
               />
-              <RatingQuestion
+              <SurveyQuestion
+                values={[1, 2, 3, 4, 5]}
                 label="교수님의 인품"
-                value={effectiveness}
-                onChange={setEffectiveness}
+                value={character}
+                onChange={setCharacter}
               />
-              <RatingQuestion
+              <SurveyQuestion
+                values={[1, 2, 3, 4, 5]}
                 label="후한 성적"
                 value={generosity}
                 onChange={setGenerosity}
               />
+              <div className="w-full text-center">
+                <textarea
+                  className="h-[100px] p-[10px] border border-gray-300 rounded-md mt-[5px] w-[500px] resize-none"
+                  placeholder="강의에 대한 자세한 의견을 작성해주세요. (최소 10자)"
+                  value={content ?? ""}
+                  onChange={(e) => setContent(e.target.value)}
+                  minLength={100}
+                  required
+                />
+              </div>
             </div>
           )}
           <button
             onClick={onClick}
-            className="bg-primary text-white rounded-md px-[20px] py-[10px] hover:scale-[101%] transition duration-fast"
+            className="bg-primary text-white rounded-md px-[20px] py-[10px] hover:scale-[101%] transition duration-fast mt-[20px]"
           >
             {stage === 1 ? "계속하기" : "제출하기"}
           </button>
         </Sheet.Content>
       </Sheet.Container>
-      <Sheet.Backdrop />
+      <Sheet.Backdrop
+        onTap={() => {
+          setOpen(false);
+          setStage(1);
+        }}
+      />
     </Sheet>
   );
 };
@@ -251,45 +271,24 @@ const SurveyQuestion = ({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-[5px]">
       <div className="font-semibold text-center">{label}</div>
-      {target.map((num) => (
-        <label key={num} className="relative cursor-pointer">
-          <input
-            type="radio"
-            value={num}
-            checked={value === num}
-            onChange={() => onChange(num)}
-            className="absolute w-0 h-0 opacity-0 peer"
-          />
-          <span className="flex items-center justify-center text-lg font-medium transition bg-gray-100 border-2 border-transparent rounded-full w-14 h-14 peer-checked:bg-pink-200 peer-checked:border-pink-400 peer-checked:text-pink-700 peer-hover:bg-gray-200">
-            {num}
-          </span>
-          <span className="ml-2">{num}</span>
-        </label>
-      ))}
-    </div>
-  );
-};
-
-interface RatingQuestionProps {
-  label: string;
-  value: number | null;
-  onChange: (value: number | null) => void;
-}
-
-const RatingQuestion = ({ label, value, onChange }: RatingQuestionProps) => {
-  return (
-    <div className="w-full">
-      <div className="font-semibold text-center">{label}</div>
-      <ReactStars
-        key={label}
-        label={label}
-        value={value ?? 0}
-        count={5}
-        onChange={onChange}
-        size={36}
-      />
+      <div className="flex items-center justify-center w-full gap-4 mt-2">
+        {target.map((num) => (
+          <label key={num} className="relative cursor-pointer">
+            <input
+              type="radio"
+              value={num}
+              checked={value === num}
+              onChange={() => onChange(num)}
+              className="absolute w-0 h-0 opacity-0 peer"
+            />
+            <span className="flex items-center justify-center font-medium transition bg-gray-100 border-2 border-transparent rounded-full text-mmd w-[40px] h-[40px] bg-grayscale-100 peer-checked:bg-blue-100 peer-checked:text-primary peer-hover:bg-gray-200">
+              {values[num]}
+            </span>
+          </label>
+        ))}
+      </div>
     </div>
   );
 };
