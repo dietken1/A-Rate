@@ -1,0 +1,62 @@
+import sqlite3
+import pandas as pd
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+import numpy as np
+
+# 한글 폰트 (Mac용 설정)
+plt.rcParams['font.family'] = 'AppleGothic'
+plt.rcParams['axes.unicode_minus'] = False
+
+#  SQLite DB 연결
+conn = sqlite3.connect('db/demo-database/src/demo.db')  # 실제 DB 파일명으로 바꿔줘
+cursor = conn.cursor()
+
+#  평가 데이터 불러오기
+df = pd.read_sql_query("SELECT * FROM evaluations", conn)
+
+# -------------------------
+# 1. 레이더 차트
+# -------------------------
+# 평균 점수 계산
+scores = df[['delivery_score', 'expertise_score', 'fairness_score', 'effectiveness_score', 'personality_score', 'difficulty_score']].mean()
+
+# 레이더 차트 그릴 준비
+labels = scores.index.tolist()
+num_vars = len(labels)
+
+angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+scores_list = scores.tolist()
+scores_list += scores_list[:1]
+angles += angles[:1]
+
+fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+ax.plot(angles, scores_list, color='blue', linewidth=2)
+ax.fill(angles, scores_list, color='skyblue', alpha=0.4)
+ax.set_xticks(angles[:-1])
+ax.set_xticklabels(labels)
+ax.set_title('강의평가 평균 점수 레이더 차트')
+plt.show()
+
+# -------------------------
+# 2. 워드클라우드
+# -------------------------
+# 전체 comment 합치기
+text = " ".join(df['comment'].dropna().tolist())
+
+# 워드클라우드 생성
+wordcloud = WordCloud(
+    font_path="/System/Library/Fonts/Supplemental/AppleGothic.ttf",  # Mac 한글 폰트 경로
+    width=800,
+    height=400,
+    background_color='white'
+).generate(text)
+
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title('강의평 코멘트 워드클라우드')
+plt.show()
+
+# 연결 종료
+conn.close()
