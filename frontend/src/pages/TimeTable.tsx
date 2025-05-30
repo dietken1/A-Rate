@@ -20,7 +20,7 @@ const TimeTable = () => {
       <Sidebar />
       <div className="flex-1 px-8 py-5 overflow-auto">
         <Header />
-        시간표
+        <img src="/images/p1.png" alt="Time Table" className="-ml-[10px]" />
       </div>
     </div>
   );

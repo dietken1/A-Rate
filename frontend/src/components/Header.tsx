@@ -21,7 +21,7 @@ const Header = () => {
         {user ? (
           <div className="flex font-medium text-mmd">
             <img
-              src={user.user.picture ?? GET_DEFAULT_PROFILE_IMAGE()}
+              src={user.user.profileImage ?? GET_DEFAULT_PROFILE_IMAGE()}
               alt="user"
               className="w-[24px] h-[24px] mr-[6px] object-cover"
             />

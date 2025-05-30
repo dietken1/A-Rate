@@ -77,14 +77,15 @@ const Dropdown = ({ options, value, onChange, placeholder }: DropdownProps) => {
       </button>
       {/* 2. 부드러운 열림/닫힘 애니메이션 적용 */}
       <ul
-        className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg 
-                    text-sm origin-top
-                    transition-all duration-200 ease-in-out
-                    ${
-                      open
-                        ? "opacity-100 transform scale-y-100 max-h-60 overflow-auto visible"
-                        : "opacity-0 transform scale-y-95 max-h-0 overflow-hidden pointer-events-none invisible"
-                    }`}
+        className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg
+          text-sm origin-top
+          transition-opacity transition-max-height duration-200 ease-in-out
+          ${
+            open
+              ? "opacity-100 max-h-60 visible overflow-y-scroll"
+              : "opacity-0 max-h-0 invisible"
+          }
+        `}
         role="listbox"
         aria-hidden={!open} // 접근성을 위해 open 상태에 따라 aria-hidden 설정
       >
@@ -92,8 +93,7 @@ const Dropdown = ({ options, value, onChange, placeholder }: DropdownProps) => {
           <li
             key={option}
             className={`px-4 py-2 cursor-pointer hover:bg-grayscale-200 transition duration-fast z-50 ${
-              // 호버 효과는 기존 duration-fast (150ms) 유지 또는 200ms로 통일 가능
-              option === value ? "bg-primary text-white" : ""
+              value && option === value ? "bg-primary text-white" : ""
             } text-sm`}
             onClick={() => handleSelect(option)}
             role="option"

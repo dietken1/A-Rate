@@ -201,8 +201,8 @@ const SideRating1 = ({ data }: { data?: SummaryLectureInfo[] }) => {
           <RatingCard
             key={lecture.id}
             lecture_name={lecture.title}
-            professor_name={lecture.professor.name}
-            rating={lecture.averageRating}
+            professor_name={lecture.professorName}
+            rating={lecture.averageScore}
           />
         ))}
       </div>
@@ -228,8 +228,8 @@ const SideRating2 = ({ data }: { data?: SummaryLectureInfo[] }) => {
           <RatingCard
             key={lecture.id}
             lecture_name={lecture.title}
-            professor_name={lecture.professor.name}
-            rating={lecture.averageRating}
+            professor_name={lecture.professorName}
+            rating={lecture.averageScore}
           />
         ))}
       </div>
