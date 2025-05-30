@@ -1,7 +1,7 @@
 # 🎓 A-Rate: 아주대학교 강의평가 시스템
 
 <div align="center">
-  <img src="@logo.png" alt="A:Rate 로고" width="200"/>
+  <img src="./logo.png" alt="A:Rate 로고" width="200"/>
 </div>
 
 A-Rate는 아주대학교 학생들을 위한 현대적이고 사용자 친화적인 강의평가 플랫폼입니다. 학생들이 수강한 강의에 대해 평가를 작성하고, 다른 학생들의 평가를 참고하여 더 나은 수강 선택을 할 수 있도록 돕습니다.
