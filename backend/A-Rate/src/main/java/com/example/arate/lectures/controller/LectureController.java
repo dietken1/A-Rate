@@ -354,4 +354,38 @@ public class LectureController {
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(lectureEvaluationService.getEvaluationsByUserId(userPrincipal.getId()));
     }
+
+    @Operation(
+        summary = "강의평 작성",
+        description = """
+            ✍️ **새로운 강의평을 작성합니다.**
+            
+            ### ⚠️ 작성 조건
+            1. **로그인 필수**: JWT 토큰 인증 필요
+            2. **수강 인증 필수**: 관리자가 해당 강의 수강을 승인한 학생만 가능
+            3. **중복 작성 불가**: 한 강의당 한 개의 강의평만 작성 가능
+            
+            ### 📝 작성 항목
+            - **텍스트 후기**: 강의에 대한 자유로운 후기
+            - **6개 평점**: 전달력, 전문성, 너그러움, 효율성, 인격, 난이도 (1-5점)
+            - **과제 정보**: 과제량, 과제 난이도
+            - **기타 정보**: 시험 형태, 팀 프로젝트 여부, 수강 학기
+            """,
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "✅ 강의평 작성 성공",
+            content = @Content(schema = @Schema(implementation = EvaluationResponse.class))),
+        @ApiResponse(responseCode = "400", description = "❌ 잘못된 요청 데이터"),
+        @ApiResponse(responseCode = "401", description = "❌ 인증 필요"),
+        @ApiResponse(responseCode = "403", description = "❌ 수강 인증되지 않은 사용자"),
+        @ApiResponse(responseCode = "404", description = "❌ 강의를 찾을 수 없음"),
+        @ApiResponse(responseCode = "409", description = "❌ 이미 강의평을 작성한 강의")
+    })
+    @GetMapping("/{lectureId}/evaluations")
+    public ResponseEntity<LectureDetailResponse> getLectureEvaluations(
+            @Parameter(description = "강의 ID", example = "1")
+            @PathVariable Long lectureId) {
+        return ResponseEntity.ok(lectureService.getLectureDetail(lectureId));
+    }
 } 

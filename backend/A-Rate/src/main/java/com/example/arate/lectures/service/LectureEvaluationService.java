@@ -86,6 +86,12 @@ public class LectureEvaluationService {
             new EvaluationResponse.AuthorInfo(
                 savedEvaluation.getUser().getId(),
                 savedEvaluation.getUser().getNickname()
+            ),
+            new EvaluationResponse.LectureInfo(
+                savedEvaluation.getLecture().getId(),
+                savedEvaluation.getLecture().getTitle(),
+                savedEvaluation.getLecture().getProfessor().getName(),
+                savedEvaluation.getLecture().getDepartment()
             )
         );
     }
@@ -268,6 +274,12 @@ public class LectureEvaluationService {
                 new EvaluationResponse.AuthorInfo(
                     evaluation.getUser().getId(),
                     evaluation.getUser().getNickname()
+                ),
+                new EvaluationResponse.LectureInfo(
+                    evaluation.getLecture().getId(),
+                    evaluation.getLecture().getTitle(),
+                    evaluation.getLecture().getProfessor().getName(),
+                    evaluation.getLecture().getDepartment()
                 )
             ))
             .collect(Collectors.toList());
@@ -303,6 +315,12 @@ public class LectureEvaluationService {
                 new EvaluationResponse.AuthorInfo(
                     evaluation.getUser().getId(),
                     evaluation.getUser().getNickname()
+                ),
+                new EvaluationResponse.LectureInfo(
+                    evaluation.getLecture().getId(),
+                    evaluation.getLecture().getTitle(),
+                    evaluation.getLecture().getProfessor().getName(),
+                    evaluation.getLecture().getDepartment()
                 )
             ))
             .collect(Collectors.toList());

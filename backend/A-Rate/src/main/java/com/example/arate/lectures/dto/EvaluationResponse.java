@@ -18,6 +18,7 @@ public class EvaluationResponse {
     private Boolean teamProject;
     private LocalDateTime createdAt;
     private AuthorInfo author;
+    private LectureInfo lecture;
 
     @Getter
     @NoArgsConstructor
@@ -45,5 +46,15 @@ public class EvaluationResponse {
     public static class AuthorInfo {
         private Long id;
         private String nickname;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LectureInfo {
+        private Long id;
+        private String title;
+        private String professor;
+        private String department;
     }
 } 

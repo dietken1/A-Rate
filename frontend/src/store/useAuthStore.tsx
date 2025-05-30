@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import UserInfo from "../types/UserInfo";
 
 interface AuthState {
@@ -29,16 +30,23 @@ const initialState: AuthState = {
 };
 */
 
-const useAuthStore = create<AuthStore>()((set) => ({
-  ...initialState,
-  authorize: (user) =>
-    set(() => ({
-      user,
-    })),
-  deauthorize: () =>
-    set(() => ({
-      user: null,
-    })),
-}));
+const useAuthStore = create<AuthStore>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      authorize: (user) =>
+        set(() => ({
+          user,
+        })),
+      deauthorize: () =>
+        set(() => ({
+          user: null,
+        })),
+    }),
+    {
+      name: "auth-store", // localStorage key
+    }
+  )
+);
 
 export default useAuthStore;
