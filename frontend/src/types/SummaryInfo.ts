@@ -8,11 +8,9 @@ export default interface SummaryInfo {
 export interface SummaryLectureInfo {
   id: number;
   title: string;
-  professor: {
-    name: string;
-    department: string;
-  };
-  averageRating: number;
+  professorName: string;
+  department: string;
+  averageScore: number;
   evaluationCount: number;
 }
 

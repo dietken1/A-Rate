@@ -1,23 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import React, { useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { post } from "../../lib/api";
+import React from "react";
 import { Sheet } from "react-modal-sheet";
-import { ApiResponse, post } from "../../lib/api";
 import LectureDetailInfo from "../../types/LectureDetailInfo";
-
-interface SurveyData {
-  content: string;
-  deliveryScore: number;
-  expertiseScore: number;
-  generosityScore: number;
-  effectivenessScore: number;
-  characterScore: number;
-  difficultyScore: number;
-  assignmentAmount: "NONE" | "FEW" | "NORMAL" | "MANY";
-  assignmentDifficulty: "EASY" | "NORMAL" | "HARD";
-  exam: "NONE" | "MIDTERM" | "FINAL" | "MIDTERM_FINAL";
-  teamProject: boolean;
-  semester: string;
-}
+import { SurveyData } from "../../types/SurveyData";
+import useAuthStore from "../../store/useAuthStore";
 
 const RatingModal = ({
   lectureId,
@@ -49,27 +36,32 @@ const RatingModal = ({
   const [difficulty, setDifficulty] = React.useState<number | null>(null);
   const [content, setContent] = React.useState<string | null>(null);
 
-  const [surveyData, setSurveyData] = React.useState<SurveyData | null>(null);
+  const { user } = useAuthStore();
 
-  const { data } = useQuery<ApiResponse<LectureDetailInfo>>({
-    queryKey: ["submit_rating", surveyData],
-    queryFn: () =>
-      post<LectureDetailInfo>(
-        `/v1/lectures/${lectureId}/evaluations`,
-        surveyData
-      ),
-    enabled: !!surveyData,
-    retry: false,
+  const mutation = useMutation({
+    mutationFn: (data: SurveyData) =>
+      post<LectureDetailInfo>(`/v1/lectures/${lectureId}/evaluations`, data, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      }),
+    onSuccess: (data) => {
+      if (data && data.success) {
+        alert("강의 평가가 성공적으로 제출되었습니다.");
+        setOpen(false);
+      } else {
+        alert(
+          data?.error || "강의 평가 제출에 실패했습니다. 다시 시도해주세요."
+        );
+      }
+    },
+    onError: (error: any) => {
+      alert(
+        error?.message ||
+          "강의 평가 제출에 실패했습니다. 네트워크 상태를 확인해주세요."
+      );
+    },
   });
-
-  useEffect(() => {
-    if (data && data.success) {
-      alert("강의 평가가 성공적으로 제출되었습니다.");
-      setOpen(false);
-    } else if (data && !data.success) {
-      alert("강의 평가 제출에 실패했습니다. 다시 시도해주세요.");
-    }
-  }, [data, setOpen]);
 
   const onClick = () => {
     if (stage === 1) {
@@ -100,15 +92,18 @@ const RatingModal = ({
       }
 
       const assignmentAmountMap: Record<number, string> = {
-        0: "NONE",
-        1: "FEW",
-        2: "NORMAL",
-        3: "MANY",
+        1: "NONE",
+        2: "FEW",
+        3: "NORMAL",
+        4: "MANY",
+        5: "MANY",
       };
       const assignmentDifficultyMap: Record<number, string> = {
-        0: "EASY",
-        1: "NORMAL",
-        2: "HARD",
+        1: "EASY",
+        2: "EASY",
+        3: "NORMAL",
+        4: "HARD",
+        5: "HARD",
       };
       const examMap: Record<number, string> = {
         0: "NONE",
@@ -117,7 +112,7 @@ const RatingModal = ({
         3: "MIDTERM_FINAL",
       };
 
-      setSurveyData({
+      mutation.mutate({
         content: content!,
         deliveryScore: delivery!,
         expertiseScore: expertise!,
@@ -179,7 +174,7 @@ const RatingModal = ({
               <SurveyQuestion
                 values={["없음", "있음"]}
                 label="팀 프로젝트가 있었나요?"
-                value={hasTeamProject ? 1 : 0}
+                value={hasTeamProject === null ? null : hasTeamProject ? 1 : 0}
                 onChange={(value) => setHasTeamProject(value === 1)}
               />
             </div>
